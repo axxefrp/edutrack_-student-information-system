@@ -1,0 +1,6 @@
+{
+  "name": "EduTrack: Student Information System",
+  "description": "EduTrack is a web-based Student Information System (SIS) designed to streamline student, teacher, and administrative interactions. It includes a point distribution system for gamified learning and provides role-based access.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
