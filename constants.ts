@@ -9,9 +9,10 @@ export const NAVIGATION_LINKS = {
     { path: '/admin/teachers', label: 'Manage Teachers', icon: 'AcademicCapIcon' },
     { path: '/admin/classes', label: 'Manage Classes', icon: 'RectangleGroupIcon' },
     { path: '/admin/subjects', label: 'Manage Subjects', icon: 'TagIcon' },
+    { path: '/admin/master-gradesheet', label: '🇱🇷 Master Gradesheet', icon: 'ClipboardDocumentListIcon' },
     { path: '/admin/parents', label: 'Manage Parents', icon: 'ShieldCheckIcon' },
     { path: '/admin/point-rules', label: 'Point Rules', icon: 'SparklesIcon' },
-    { path: '/admin/leaderboard', label: 'Leaderboard', icon: 'TrophyIcon' }, 
+    { path: '/admin/leaderboard', label: 'Leaderboard', icon: 'TrophyIcon' },
     { path: '/admin/reports', label: 'Admin Reports', icon: 'ChartPieIcon' },
     { path: '/messages', label: 'Messages', icon: 'EnvelopeIcon' },
     { path: '/calendar', label: 'School Calendar', icon: 'CalendarDaysIcon' },
@@ -23,6 +24,7 @@ export const NAVIGATION_LINKS = {
     { path: '/teacher/attendance', label: 'Attendance', icon: 'ClipboardDocumentCheckIcon' },
     { path: '/teacher/points', label: 'Award Points', icon: 'SparklesIcon' },
     { path: '/teacher/grades', label: 'Gradebook', icon: 'PencilSquareIcon' },
+    { path: '/teacher/comprehensive-gradebook', label: '🇱🇷 Comprehensive Gradebook', icon: 'AcademicCapIcon' },
     { path: '/teacher/reports', label: 'Teacher Reports', icon: 'ChartPieIcon' },
     { path: '/teacher/resources', label: 'Class Resources', icon: 'FolderArrowDownIcon' },
     { path: '/messages', label: 'Messages', icon: 'EnvelopeIcon' },
@@ -133,16 +135,24 @@ export const MOCK_GRADES_INITIAL: Grade[] = [
         term: 1,
         isWAECSubject: false
     },
-    { 
-        id: 'g2', 
-        studentId: 's1', 
+    {
+        id: 'g2',
+        studentId: 's1',
         classId: 'c3', // Grade 5 Language Arts
-        subjectOrAssignmentName: 'Language Arts - Book Report', 
-        score: 'A-', 
-        dateAssigned: '2024-07-22',
-        dueDate: '2024-07-21',
-        status: 'Graded', 
-        teacherComments: 'Excellent presentation!' 
+        subjectId: 'subj_la',
+        subjectOrAssignmentName: 'Language Arts - Book Report',
+        assessmentType: 'Assignment',
+        score: '88',
+        maxScore: 100,
+        dateAssigned: '2024-10-22',
+        dueDate: '2024-10-21',
+        status: 'Graded',
+        teacherComments: 'Excellent presentation!',
+        liberianGrade: 'A1',
+        continuousAssessment: 85,
+        externalExamination: 90,
+        term: 1,
+        isWAECSubject: false
     },
     { 
         id: 'g3', 
@@ -204,11 +214,74 @@ export const MOCK_GRADES_INITIAL: Grade[] = [
         id: 'g8',
         studentId: 's2',
         classId: 'c2', // Science
+        subjectId: 'subj_sci',
         subjectOrAssignmentName: 'Science Project Proposal',
-        score: '',
+        assessmentType: 'Project',
+        score: '75',
+        maxScore: 100,
         dateAssigned: lastWeek.toISOString().split('T')[0],
-        dueDate: lastWeek.toISOString().split('T')[0], // Due last week, implies submitted or pending
-        status: 'Pending Submission', // Assuming not yet graded
+        dueDate: lastWeek.toISOString().split('T')[0],
+        status: 'Graded',
+        liberianGrade: 'A2',
+        continuousAssessment: 78,
+        externalExamination: 73,
+        term: 1,
+        isWAECSubject: true
+    },
+    // Additional sample grades for comprehensive testing
+    {
+        id: 'g9',
+        studentId: 's3',
+        classId: 'c1', // Grade 5 Alpha (Math)
+        subjectId: 'subj_math',
+        subjectOrAssignmentName: 'Mathematics - Second Term Quiz',
+        assessmentType: 'Quiz',
+        score: '92',
+        maxScore: 100,
+        dateAssigned: '2025-02-10',
+        status: 'Graded',
+        teacherComments: 'Excellent understanding of concepts.',
+        liberianGrade: 'A1',
+        continuousAssessment: 90,
+        externalExamination: 93,
+        term: 2,
+        isWAECSubject: false
+    },
+    {
+        id: 'g10',
+        studentId: 's4',
+        classId: 'c2', // Science
+        subjectId: 'subj_sci',
+        subjectOrAssignmentName: 'General Science - Laboratory Practical',
+        assessmentType: 'Exam',
+        score: '67',
+        maxScore: 100,
+        dateAssigned: '2025-02-15',
+        status: 'Graded',
+        teacherComments: 'Good practical skills, needs theory improvement.',
+        liberianGrade: 'B2',
+        continuousAssessment: 70,
+        externalExamination: 65,
+        term: 2,
+        isWAECSubject: true
+    },
+    {
+        id: 'g11',
+        studentId: 's5',
+        classId: 'c4', // Liberian History
+        subjectId: 'subj_libhist',
+        subjectOrAssignmentName: 'Liberian History - Independence Essay',
+        assessmentType: 'Assignment',
+        score: '58',
+        maxScore: 100,
+        dateAssigned: '2025-01-20',
+        status: 'Graded',
+        teacherComments: 'Shows understanding but needs more detail.',
+        liberianGrade: 'C4',
+        continuousAssessment: 60,
+        externalExamination: 57,
+        term: 2,
+        isWAECSubject: false
     }
 ];
 

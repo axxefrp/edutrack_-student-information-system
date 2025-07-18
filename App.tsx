@@ -32,6 +32,8 @@ import MessagingScreen from './components/Messaging/MessagingScreen';
 import SchoolCalendarScreen from './components/Calendar/SchoolCalendarScreen';
 import AdminReportsScreen from './components/Reporting/AdminReportsScreen';
 import TeacherReportsScreen from './components/Reporting/TeacherReportsScreen';
+import AdminMasterGradesheetScreen from './components/Admin/AdminMasterGradesheetScreen';
+import ComprehensiveTeacherGradebook from './components/Teacher/ComprehensiveTeacherGradebook';
 import StudentScheduleScreen from './components/Student/StudentScheduleScreen';
 import StudentAssignmentsScreen from './components/Student/StudentAssignmentsScreen'; 
 import TeacherClassResourcesScreen from './components/Teacher/TeacherClassResources'; 
@@ -916,6 +918,7 @@ const App: React.FC = () => {
                 <Route path="admin/teachers/:teacherId" element={<AdminTeacherProfileView />} />
                 <Route path="admin/classes" element={<AdminClassManagement />} />
                 <Route path="admin/subjects" element={<AdminSubjectManagement />} />
+                <Route path="admin/master-gradesheet" element={<AdminMasterGradesheetScreen />} />
                 <Route path="admin/parents" element={<AdminParentManagement />} />
                 <Route path="admin/point-rules" element={<AdminPointRulesManagement />} />
                 <Route path="admin/leaderboard" element={<AdminLeaderboardScreen />} />
@@ -929,6 +932,7 @@ const App: React.FC = () => {
                 <Route path="teacher/attendance" element={<TeacherAttendance />} />
                 <Route path="teacher/points" element={<TeacherPointSystem />} />
                 <Route path="teacher/grades" element={<TeacherGradebookScreen />} />
+                <Route path="teacher/comprehensive-gradebook" element={<ComprehensiveTeacherGradebook />} />
                 <Route path="teacher/reports" element={<TeacherReportsScreen />} />
                 <Route path="teacher/resources" element={<TeacherClassResourcesScreen />} /> 
               </>

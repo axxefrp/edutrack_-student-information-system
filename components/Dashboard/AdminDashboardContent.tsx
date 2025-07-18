@@ -206,6 +206,9 @@ const AdminDashboardContent: React.FC = () => {
           <Link to="/admin/classes" className="block p-4 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition text-center font-medium">
             Manage Classes
           </Link>
+          <Link to="/admin/master-gradesheet" className="block p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center font-medium">
+            🇱🇷 Master Gradesheet
+          </Link>
           <Link to="/admin/leaderboard" className="block p-4 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 transition text-center font-medium">
             View Leaderboard
           </Link>
