@@ -182,10 +182,11 @@ const TeacherDashboardContent: React.FC = () => {
       
       <div className="bg-white p-6 rounded-xl shadow-lg">
         <h3 className="text-lg font-semibold text-gray-700 mb-3">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Link to="/teacher/my-classes" className="block p-4 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition text-center font-medium">View My Classes</Link>
           <Link to="/teacher/grades" className="block p-4 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition text-center font-medium">Open Gradebook</Link>
           <Link to="/teacher/comprehensive-gradebook" className="block p-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition text-center font-medium">🇱🇷 Comprehensive Gradebook</Link>
+          <Link to="/teacher/master-gradesheet" className="block p-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-center font-medium">📤 Master Gradesheet</Link>
           <Link to="/teacher/attendance" className="block p-4 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition text-center font-medium">Mark Attendance</Link>
           <Link to="/messages" className="block p-4 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition text-center font-medium">My Messages</Link>
         </div>

@@ -76,6 +76,17 @@ export interface Grade {
   externalExamination?: number; // External exam score (70% of final grade)
   term?: 1 | 2 | 3; // Academic term (Liberian schools have 3 terms)
   isWAECSubject?: boolean; // Whether this is a WAEC examination subject
+
+  // Grade submission and approval workflow fields
+  submissionStatus?: 'Draft' | 'Submitted' | 'Approved' | 'Rejected'; // Teacher submission status
+  submittedToAdmin?: boolean; // Whether grade has been submitted to admin
+  submittedDate?: string; // Date when teacher submitted grade to admin
+  submittedBy?: string; // Teacher ID who submitted the grade
+  approvedBy?: string; // Admin ID who approved the grade
+  approvedDate?: string; // Date when admin approved the grade
+  rejectionReason?: string; // Reason for rejection if applicable
+  isFinalGrade?: boolean; // Whether this is a final term grade
+  isLocked?: boolean; // Whether grade is locked from further editing
 }
 
 export interface RegistrationDetails {

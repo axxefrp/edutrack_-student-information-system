@@ -1,7 +1,14 @@
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useMemo } from 'react';
 import { AppContext } from '../../App';
 import { SchoolEvent, UserRole } from '../../types';
+import {
+  generateLiberianSchoolEvents,
+  getCurrentAcademicTerm,
+  getTermEvents,
+  LIBERIAN_ACADEMIC_TERMS,
+  LiberianAcademicTerm
+} from '../../utils/liberianCalendarSystem';
 import Button from '../Shared/Button';
 import Modal from '../Shared/Modal';
 import Input from '../Shared/Input';
@@ -11,6 +18,8 @@ const SchoolCalendarScreen: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTerm, setSelectedTerm] = useState<LiberianAcademicTerm | 'all'>(getCurrentAcademicTerm());
+  const [viewMode, setViewMode] = useState<'calendar' | 'cultural' | 'academic'>('calendar');
 
   // Form state for new event
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -28,8 +37,25 @@ const SchoolCalendarScreen: React.FC = () => {
   if (!context || !context.currentUser) {
     return <div className="p-6 text-gray-700">Loading calendar data...</div>;
   }
-  
+
   const { schoolEvents, currentUser, addSchoolEvent, addNotificationDirectly } = context;
+
+  // Generate Liberian cultural events for current and next year
+  const liberianEvents = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return [
+      ...generateLiberianSchoolEvents(currentYear),
+      ...generateLiberianSchoolEvents(currentYear + 1)
+    ];
+  }, []);
+
+  // Combine school events with Liberian cultural events
+  const allEvents = useMemo(() => {
+    return [...schoolEvents, ...liberianEvents];
+  }, [schoolEvents, liberianEvents]);
+
+  // Get current academic term info
+  const currentTerm = getCurrentAcademicTerm();
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString(undefined, {
@@ -48,15 +74,25 @@ const SchoolCalendarScreen: React.FC = () => {
     });
   };
   
-  const relevantEvents = schoolEvents.filter(event => {
-    if (!event.audience || event.audience === 'all') {
-      return true;
+  // Filter events based on user role and selected term
+  const relevantEvents = useMemo(() => {
+    let filtered = allEvents.filter(event => {
+      if (!event.audience || event.audience === 'all') {
+        return true;
+      }
+      if (Array.isArray(event.audience)) {
+        return event.audience.includes(currentUser.role);
+      }
+      return false;
+    });
+
+    // Filter by selected term if not 'all'
+    if (selectedTerm !== 'all') {
+      filtered = getTermEvents(filtered, selectedTerm);
     }
-    if (Array.isArray(event.audience)) {
-      return event.audience.includes(currentUser.role);
-    }
-    return false;
-  }).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return filtered.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [allEvents, currentUser.role, selectedTerm]);
 
 
   const eventsByMonth: Record<string, SchoolEvent[]> = relevantEvents.reduce((acc, event) => {
@@ -156,45 +192,165 @@ const SchoolCalendarScreen: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 pb-4 border-b gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">School Event Calendar</h1>
-        {currentUser.role === UserRole.ADMIN && (
-          <Button onClick={openAddEventModal} variant="primary">
-            Add New Event
-          </Button>
-        )}
+      {/* Enhanced Header with Liberian Context */}
+      <div className="bg-gradient-to-r from-red-600 via-white to-blue-600 text-gray-800 p-6 rounded-lg mb-6 border-2 border-red-600">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-red-700">🇱🇷 Liberian School Calendar</h1>
+            <p className="text-blue-700 mt-1 font-medium">
+              Current Term: {currentTerm.name} ({currentTerm.startMonth <= 7 ? 'May-July' : currentTerm.startMonth <= 4 ? 'January-April' : 'September-December'})
+            </p>
+          </div>
+          {currentUser.role === UserRole.ADMIN && (
+            <Button onClick={openAddEventModal} variant="primary">
+              Add School Event
+            </Button>
+          )}
+        </div>
       </div>
 
+      {/* Navigation and Filters */}
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-6">
+            {[
+              { key: 'calendar', label: '📅 All Events', icon: '📅' },
+              { key: 'cultural', label: '🎭 Cultural Events', icon: '🎭' },
+              { key: 'academic', label: '🎓 Academic Calendar', icon: '🎓' }
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setViewMode(tab.key as any)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  viewMode === tab.key
+                    ? 'border-red-500 text-red-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Term Filter */}
+        <div className="px-6 py-4 bg-gray-50 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <span className="text-sm font-medium text-gray-700">Academic Term:</span>
+            <select
+              value={selectedTerm === 'all' ? 'all' : selectedTerm.termNumber}
+              onChange={(e) => {
+                if (e.target.value === 'all') {
+                  setSelectedTerm('all');
+                } else {
+                  const termNum = parseInt(e.target.value) as 1 | 2 | 3;
+                  setSelectedTerm(LIBERIAN_ACADEMIC_TERMS.find(t => t.termNumber === termNum)!);
+                }
+              }}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-500"
+            >
+              <option value="all">All Terms</option>
+              {LIBERIAN_ACADEMIC_TERMS.map(term => (
+                <option key={term.termNumber} value={term.termNumber}>
+                  {term.name} ({term.startMonth <= 7 ? 'May-Jul' : term.startMonth <= 4 ? 'Jan-Apr' : 'Sep-Dec'})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="text-sm text-gray-600">
+            Showing {relevantEvents.length} events
+          </div>
+        </div>
+      </div>
+
+      {/* Events Display */}
       {relevantEvents.length === 0 && (
         <div className="text-center py-12 bg-white rounded-lg shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-primary-400 mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-red-400 mx-auto mb-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5M12 17.25h.008v.008H12v-.008Z" />
           </svg>
-          <p className="text-xl text-gray-600">No upcoming school events found.</p>
-          <p className="text-sm text-gray-400 mt-2">Check back later for updates.</p>
+          <p className="text-xl text-gray-600">No events found for the selected term.</p>
+          <p className="text-sm text-gray-400 mt-2">Try selecting a different term or check back later for updates.</p>
         </div>
       )}
 
       {upcomingMonths.map(monthYear => (
         <div key={monthYear} className="mb-10">
-          <h2 className="text-2xl font-semibold text-primary-700 mb-6 pb-2 border-b-2 border-primary-200">
+          <h2 className="text-2xl font-semibold text-red-700 mb-6 pb-2 border-b-2 border-red-200 flex items-center">
+            <span className="mr-2">📅</span>
             {monthYear}
           </h2>
           <div className="space-y-6">
-            {eventsByMonth[monthYear].map(event => (
-              <div key={event.id} className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-secondary-400">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-2">
-                  <h3 className="text-xl font-semibold text-gray-800">{event.title}</h3>
-                  <p className="text-md font-medium text-secondary-600 mt-1 sm:mt-0">{formatDate(event.date)}</p>
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{event.description}</p>
-                {event.audience && event.audience !== 'all' && Array.isArray(event.audience) && (
+            {eventsByMonth[monthYear].map(event => {
+              const isLiberianEvent = event.title.includes('🇱🇷') || event.title.includes('🎭');
+              const isCulturalEvent = event.title.includes('🎭');
+              const isNationalHoliday = event.title.includes('🇱🇷');
+
+              return (
+                <div
+                  key={event.id}
+                  className={`bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 ${
+                    isNationalHoliday ? 'border-red-600' :
+                    isCulturalEvent ? 'border-blue-600' :
+                    'border-gray-400'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-3">
+                    <h3 className={`text-xl font-semibold ${
+                      isNationalHoliday ? 'text-red-700' :
+                      isCulturalEvent ? 'text-blue-700' :
+                      'text-gray-800'
+                    }`}>
+                      {event.title}
+                    </h3>
+                    <div className="flex items-center space-x-2 mt-1 sm:mt-0">
+                      <p className={`text-md font-medium ${
+                        isNationalHoliday ? 'text-red-600' :
+                        isCulturalEvent ? 'text-blue-600' :
+                        'text-gray-600'
+                      }`}>
+                        {formatDate(event.date)}
+                      </p>
+                      {isLiberianEvent && (
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          isNationalHoliday ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {isNationalHoliday ? 'National Holiday' : 'Cultural Event'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-gray-600 text-sm leading-relaxed">
+                    {event.description.split('\n\n').map((section, index) => (
+                      <div key={index} className="mb-3">
+                        {section.includes('🎓 Educational Activities:') ? (
+                          <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
+                            <h4 className="font-semibold text-green-800 mb-2">🎓 Educational Activities</h4>
+                            <div className="text-green-700 text-sm">
+                              {section.replace('🎓 Educational Activities:', '').trim()}
+                            </div>
+                          </div>
+                        ) : section.includes('🇱🇷 Cultural Significance:') ? (
+                          <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                            <h4 className="font-semibold text-blue-800 mb-2">🇱🇷 Cultural Significance</h4>
+                            <div className="text-blue-700 text-sm">
+                              {section.replace('🇱🇷 Cultural Significance:', '').trim()}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{section}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {event.audience && event.audience !== 'all' && Array.isArray(event.audience) && (
                     <p className="text-xs text-gray-400 mt-3">
-                        Relevant for: {event.audience.map(r => r.charAt(0) + r.slice(1).toLowerCase()).join(', ')}
+                      Relevant for: {event.audience.map(r => r.charAt(0) + r.slice(1).toLowerCase()).join(', ')}
                     </p>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
