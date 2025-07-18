@@ -1,4 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { db } from '../../firebase-config';
+import { doc, getDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import { AppContext } from '../../App';
 import { UserRole, RegistrationDetails, Student } from '../../types';
@@ -10,6 +12,9 @@ const RegisterScreen: React.FC = () => {
   const context = useContext(AppContext);
   const navigate = useNavigate();
 
+  // For post-registration profile wait
+  const [waitingForProfile, setWaitingForProfile] = useState(false);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,7 +24,7 @@ const RegisterScreen: React.FC = () => {
   const [studentName, setStudentName] = useState('');
   const [studentGrade, setStudentGrade] = useState<number | ''>('');
   const [teacherName, setTeacherName] = useState('');
-  const [teacherSubject, setTeacherSubject] = useState('');
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [parentLinksToStudentId, setParentLinksToStudentId] = useState('');
 
   // Individual field errors
@@ -92,8 +97,8 @@ const RegisterScreen: React.FC = () => {
         setTeacherNameError("Teacher name is required.");
         isValid = false;
       }
-      if (!teacherSubject.trim()) {
-        setTeacherSubjectError("Teacher subject is required.");
+      if (!selectedSubjectIds || selectedSubjectIds.length === 0) {
+        setTeacherSubjectError("At least one subject is required.");
         isValid = false;
       }
     } else if (role === UserRole.PARENT) {
@@ -125,7 +130,7 @@ const RegisterScreen: React.FC = () => {
       details.studentGrade = Number(studentGrade);
     } else if (role === UserRole.TEACHER) {
       details.teacherName = teacherName;
-      details.teacherSubject = teacherSubject;
+      details.teacherSubjectIds = selectedSubjectIds;
     } else if (role === UserRole.PARENT) {
       details.parentLinksToStudentId = parentLinksToStudentId;
     }
@@ -133,7 +138,8 @@ const RegisterScreen: React.FC = () => {
     const result = await context.registerUser(email, password, role, details);
 
     if (result.success) {
-      setFormSuccessMessage(`${result.message} You will be redirected to login.`);
+      setFormSuccessMessage(`${result.message} Setting up your account...`);
+      setWaitingForProfile(true);
       // Reset form fields
       setEmail('');
       setPassword('');
@@ -141,14 +147,60 @@ const RegisterScreen: React.FC = () => {
       setStudentName('');
       setStudentGrade('');
       setTeacherName('');
-      setTeacherSubject('');
+      setSelectedSubjectIds([]);
       setParentLinksToStudentId(context.students.length > 0 ? context.students[0].id : '');
-      
-      setTimeout(() => navigate('/login'), 2500);
+
+      // Wait for user profile to exist in Firestore, then navigate
+      const checkProfile = async () => {
+        const user = context?.currentUser;
+        let uid = null;
+        if (user) {
+          uid = user.uid;
+        } else {
+          // Try to get from Firebase Auth directly
+          const authUser = (window as any).firebase?.auth?.currentUser || (window as any).auth?.currentUser;
+          if (authUser) uid = authUser.uid;
+        }
+        // Fallback: try to get from localStorage (if persisted)
+        if (!uid) {
+          try {
+            const stored = localStorage.getItem('firebase:authUser:default');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              uid = parsed.uid;
+            }
+          } catch {}
+        }
+        if (!uid) {
+          setFormMessage('Could not determine user ID after registration. Please log in.');
+          setWaitingForProfile(false);
+          setIsSubmitting(false);
+          return;
+        }
+        // Poll for profile
+        let attempts = 0;
+        const maxAttempts = 10;
+        const delay = 400;
+        while (attempts < maxAttempts) {
+          const userDoc = await getDoc(doc(db, 'users', uid));
+          if (userDoc.exists()) {
+            setWaitingForProfile(false);
+            setIsSubmitting(false);
+            navigate('/');
+            return;
+          }
+          await new Promise(res => setTimeout(res, delay));
+          attempts++;
+        }
+        setFormMessage('Account created, but profile setup is taking longer than expected. Please try logging in.');
+        setWaitingForProfile(false);
+        setIsSubmitting(false);
+      };
+      checkProfile();
     } else {
       setFormMessage(result.message);
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -163,6 +215,15 @@ const RegisterScreen: React.FC = () => {
         </div>
 
         {formSuccessMessage && <p className="mb-4 p-3 bg-green-100 text-green-700 rounded-md text-center">{formSuccessMessage}</p>}
+        {waitingForProfile && (
+          <div className="mb-4 flex flex-col items-center">
+            <svg className="animate-spin h-6 w-6 text-secondary-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+            <span className="text-secondary-700">Finalizing your account, please wait...</span>
+          </div>
+        )}
         {formMessage && <p className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-center">{formMessage}</p>}
         
         <form onSubmit={handleRegister} className="space-y-4">
@@ -186,10 +247,34 @@ const RegisterScreen: React.FC = () => {
             </>
           )}
 
-          {role === UserRole.TEACHER && (
+          {role === UserRole.TEACHER && context && (
             <>
               <Input label="Full Name (Teacher)" type="text" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} placeholder="Enter teacher's full name" error={teacherNameError} />
-              <Input label="Subject(s)" type="text" value={teacherSubject} onChange={(e) => setTeacherSubject(e.target.value)} placeholder="e.g., Mathematics, Science" error={teacherSubjectError} />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subjects Taught</label>
+                <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
+                  {context.subjects.length > 0 ? context.subjects.map(subject => (
+                    <label key={subject.id} className={`flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md ${isSubmitting ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedSubjectIds.includes(subject.id)}
+                        onChange={() => {
+                          setSelectedSubjectIds(prev =>
+                            prev.includes(subject.id)
+                              ? prev.filter(id => id !== subject.id)
+                              : [...prev, subject.id]
+                          );
+                          if(teacherSubjectError) setTeacherSubjectError('');
+                        }}
+                        className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        disabled={isSubmitting}
+                      />
+                      <span className="text-sm text-gray-700">{subject.name}</span>
+                    </label>
+                  )) : <p className="text-xs text-gray-500">No subjects available. Please add subjects first in 'Manage Subjects'.</p>}
+                </div>
+                {teacherSubjectError && <p className="mt-1 text-xs text-red-600">{teacherSubjectError}</p>}
+              </div>
             </>
           )}
 

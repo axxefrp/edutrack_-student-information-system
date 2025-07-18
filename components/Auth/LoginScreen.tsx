@@ -1,7 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AppContext } from '../../App';
-import { UserRole } from '../../types';
 import { APP_NAME } from '../../constants';
 import Button from '../Shared/Button';
 
@@ -9,7 +8,6 @@ const LoginScreen: React.FC = () => {
   const context = useContext(AppContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.STUDENT);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -85,23 +83,7 @@ const LoginScreen: React.FC = () => {
               required
             />
           </div>
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-              I am a... (Select before registering)
-            </label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-            >
-              {Object.values(UserRole).map((r) => (
-                <option key={r} value={r}>
-                  {r.charAt(0) + r.slice(1).toLowerCase()}
-                </option>
-              ))}
-            </select>
-          </div>
+
           
           <Button
             type="submit"

@@ -29,7 +29,7 @@ export interface Teacher {
   id: string;
   userId: string; // Links to User.uid
   name: string;
-  subject: string; // Primary specialization of the teacher
+  subjectIds: string[]; // Array of Subject.id (multiple subjects)
 }
 
 export interface PointTransaction {
@@ -41,18 +41,41 @@ export interface PointTransaction {
   date: string;
 }
 
+export type AssessmentType = 'Quiz' | 'Test' | 'Exam' | 'Assignment' | 'Project' | 'Participation' | 'Homework' | 'Other';
+
+// Liberian Grading System (Based on WAEC Standards)
+export type LiberianGradeScale = 'A1' | 'A2' | 'A3' | 'B2' | 'B3' | 'C4' | 'C5' | 'C6' | 'D7' | 'E8' | 'F9';
+
+export interface LiberianGradeInfo {
+  grade: LiberianGradeScale;
+  description: string;
+  percentage: string;
+  points: number;
+  isCredit: boolean; // A1-C6 are credit grades for university admission
+}
+
 export interface Grade {
   id: string;
   studentId: string;
   classId: string; // Link the grade to a specific class
+  subjectId?: string; // Link to specific subject within the class
   subjectOrAssignmentName: string; // e.g., "Math - Chapter 5 Test" or "History Essay"
-  score: string; // Can be numeric "85" or letter "A-"
+  assessmentType: AssessmentType; // Categorize the type of assessment
+  score: string; // Can be numeric "85" or letter "A-" or Liberian grade "A1", "B2", etc.
   maxScore?: number | string; // Optional, e.g., 100
+  weight?: number; // Optional: Weight of this assessment (e.g., 0.3 for 30%)
   dateAssigned: string;
   teacherComments?: string;
   dueDate?: string; // Optional: ISO date string for assignment due date
   status?: 'Upcoming' | 'Pending Submission' | 'Submitted' | 'Graded'; // Optional: Status of the assignment
   submissionDate?: string; // Optional: ISO date string when student submitted
+
+  // Liberian-specific grading fields
+  liberianGrade?: LiberianGradeScale; // Official Liberian grade scale (A1-F9)
+  continuousAssessment?: number; // Internal assessment score (30% of final grade)
+  externalExamination?: number; // External exam score (70% of final grade)
+  term?: 1 | 2 | 3; // Academic term (Liberian schools have 3 terms)
+  isWAECSubject?: boolean; // Whether this is a WAEC examination subject
 }
 
 export interface RegistrationDetails {
@@ -60,7 +83,8 @@ export interface RegistrationDetails {
   studentGrade?: number;
   parentLinksToStudentId?: string;
   teacherName?: string;
-  teacherSubject?: string;
+  teacherSubject?: string; // legacy, can be removed later
+  teacherSubjectIds?: string[]; // for multi-subject teacher registration
 }
 
 export interface Subject {
@@ -72,9 +96,9 @@ export interface Subject {
 export interface SchoolClass {
   id: string;
   name: string;
-  teacherId?: string | null; // Links to Teacher.id, null if unassigned
+  teacherIds: string[]; // Array of Teacher.id (multiple teachers per class)
   studentIds: string[]; // Array of Student.id
-  subjectId?: string | null; // Links to Subject.id
+  subjectIds: string[]; // Array of Subject.id (multiple subjects per class)
   description?: string; // General notes about the class
 }
 
@@ -119,50 +143,97 @@ export interface DocumentResource {
   category: DocumentResourceCategory;
 }
 
+// Point Rules System Types
+export type PointRuleCondition = 'attendance_perfect_week' | 'assignment_submitted_early' | 'assignment_high_score' | 'participation_active' | 'behavior_excellent' | 'improvement_significant';
+
+export type PointRuleTrigger = 'automatic' | 'teacher_suggestion';
+
+export interface PointRule {
+  id: string;
+  name: string;
+  description: string;
+  condition: PointRuleCondition;
+  points: number;
+  trigger: PointRuleTrigger;
+  isActive: boolean;
+  createdBy: string; // Admin user ID
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  // Condition-specific parameters
+  parameters?: {
+    minScore?: number; // For assignment_high_score
+    daysEarly?: number; // For assignment_submitted_early
+    improvementThreshold?: number; // For improvement_significant
+    subjectId?: string; // Optional subject restriction
+    gradeLevel?: number; // Optional grade level restriction
+  };
+}
+
+export interface PointRuleSuggestion {
+  id: string;
+  ruleId: string;
+  studentId: string;
+  teacherId: string;
+  reason: string;
+  suggestedPoints: number;
+  isApplied: boolean;
+  createdAt: string; // ISO date string
+  appliedAt?: string; // ISO date string when teacher applied the suggestion
+}
+
 // Minimal structure for AppContext
 export interface AppContextType {
   currentUser: User | null;
   users: User[];
   students: Student[];
   teachers: Teacher[];
-  subjects: Subject[]; 
+  subjects: Subject[];
   pointTransactions: PointTransaction[];
   schoolClasses: SchoolClass[];
   grades: Grade[];
-  messages: Message[]; 
+  messages: Message[];
   schoolEvents: SchoolEvent[];
   documentResources: DocumentResource[];
+  pointRules: PointRule[];
+  pointRuleSuggestions: PointRuleSuggestion[];
   notifications: ToastNotification[];
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   registerUser: (email: string, password: string, role: UserRole, details: RegistrationDetails) => Promise<{success: boolean, message: string}>;
-  addStudent: (name: string, grade: number) => Student;
-  updateStudent: (student: Student) => void;
-  deleteStudent: (studentId: string) => void; 
+  addStudent: (name: string, grade: number) => Promise<Student | null>;
+  updateStudent: (student: Student) => Promise<void>;
+  deleteStudent: (studentId: string) => Promise<void>;
   deleteParentUser: (userId: string) => void;
   awardPoints: (studentId: string, points: number, reason: string, teacherId: string) => void;
   markAttendance: (studentId: string, date: string, status: 'present' | 'absent' | 'late') => void;
-  addTeacher: (name: string, subject: string, userId: string) => Teacher;
-  updateTeacher: (teacher: Teacher) => void;
-  deleteTeacher: (teacherId: string) => void; 
-  addSubject: (name: string, description?: string) => Subject; 
-  updateSubject: (updatedSubject: Subject) => void; 
-  deleteSubject: (subjectId: string) => void; 
-  addSchoolClass: (name: string, subjectId?: string | null, description?: string) => SchoolClass; 
-  updateSchoolClass: (updatedClass: SchoolClass) => void;
-  deleteSchoolClass: (classId: string) => void; 
-  assignTeacherToClass: (classId: string, teacherId: string | null) => void;
+  addTeacher: (name: string, subjectIds: string[], userId: string) => Promise<Teacher | null>;
+  updateTeacher: (teacher: Teacher) => Promise<void>;
+  deleteTeacher: (teacherId: string) => Promise<void>;
+  addSubject: (name: string, description?: string) => Promise<Subject | null>;
+  updateSubject: (updatedSubject: Subject) => Promise<void>;
+  deleteSubject: (subjectId: string) => Promise<void>;
+  addSchoolClass: (name: string, subjectIds: string[], description?: string) => Promise<SchoolClass | null>;
+  updateSchoolClass: (updatedClass: SchoolClass) => Promise<void>;
+  deleteSchoolClass: (classId: string) => Promise<void>;
+  assignTeachersToClass: (classId: string, teacherIds: string[]) => void;
   assignStudentsToClass: (classId: string, studentIds: string[]) => void;
-  addGrade: (newGradeData: Omit<Grade, 'id'>) => Grade;
-  updateGrade: (updatedGrade: Grade) => void;
-  deleteGrade: (gradeId: string) => void;
+  addGrade: (newGradeData: Omit<Grade, 'id'>) => Promise<Grade | null>;
+  updateGrade: (updatedGrade: Grade) => Promise<void>;
+  deleteGrade: (gradeId: string) => Promise<void>;
   submitAssignment: (gradeId: string) => void; 
   sendMessage: (recipientId: string, subject: string, body: string) => void; 
   markMessageAsRead: (messageId: string) => void; 
   getUnreadMessagesCount: () => number;
   removeNotification: (id: string) => void;
-  addSchoolEvent: (newEventData: Omit<SchoolEvent, 'id'>) => SchoolEvent;
+  addSchoolEvent: (newEventData: Omit<SchoolEvent, 'id'>) => Promise<SchoolEvent | null>;
   addNotificationDirectly: (title: string, message: string, type: 'info' | 'success' | 'error') => void;
   addDocumentResource: (resourceData: Omit<DocumentResource, 'id' | 'fileURL'>, file: File) => Promise<DocumentResource | null>;
-  deleteDocumentResource: (resourceId: string) => void;
+  deleteDocumentResource: (resourceId: string) => Promise<void>;
+  // Point Rules System
+  addPointRule: (ruleData: Omit<PointRule, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PointRule | null>;
+  updatePointRule: (updatedRule: PointRule) => Promise<void>;
+  deletePointRule: (ruleId: string) => Promise<void>;
+  generatePointSuggestions: (studentId: string, teacherId: string) => PointRuleSuggestion[];
+  applyPointSuggestion: (suggestionId: string) => Promise<void>;
+  dismissPointSuggestion: (suggestionId: string) => Promise<void>;
 }

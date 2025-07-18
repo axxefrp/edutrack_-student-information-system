@@ -1,9 +1,10 @@
 
-import React, { useContext } from 'react'; 
+import React, { useContext } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AppContext } from '../../App'; 
+import { AppContext } from '../../App';
 import { NAVIGATION_LINKS } from '../../constants';
 import { UserRole } from '../../types';
+import { SimpleThemeToggle } from '../Shared/SimpleThemeToggle';
 
 interface HeaderProps {
   username: string;
@@ -71,17 +72,18 @@ const Header: React.FC<HeaderProps> = ({ username, onLogout }) => {
   const pageTitle = getPageTitle(location.pathname, context?.currentUser?.role);
 
   return (
-    <header className="h-16 bg-white shadow-md flex items-center justify-between px-6">
+    <header className="h-16 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700">
       <div>
-        <h2 className="text-lg font-semibold text-gray-700">{pageTitle}</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</h2>
       </div>
       <div className="flex items-center space-x-4">
+        <SimpleThemeToggle />
         <div className="text-right">
-            <p className="text-sm font-medium text-gray-700">{username}</p>
-            <p className="text-xs text-gray-500">
-                Online 
-                {unreadMessages > 0 && 
-                    <span className="text-red-500 font-semibold ml-1">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{username}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+                Online
+                {unreadMessages > 0 &&
+                    <span className="text-red-500 dark:text-red-400 font-semibold ml-1">
                         ({unreadMessages} new message{unreadMessages > 1 ? 's' : ''})
                     </span>
                 }
@@ -89,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ username, onLogout }) => {
         </div>
         <button
           onClick={onLogout}
-          className="flex items-center text-sm text-gray-600 hover:text-primary-600 transition-colors duration-150"
+          className="flex items-center text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150"
           title="Logout"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-1">

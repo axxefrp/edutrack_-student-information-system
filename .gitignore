@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Security - Sensitive files
+serviceAccountKey.json
+*.key
+*.pem
+.env
+.env.local
+.env.production
+.env.development
+config/secrets.json
+firebase-adminsdk-*.json
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log

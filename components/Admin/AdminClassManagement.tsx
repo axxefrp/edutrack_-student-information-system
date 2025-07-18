@@ -1,7 +1,7 @@
 
 import React, { useContext, useState, useMemo } from 'react';
 import { AppContext } from '../../App';
-import { SchoolClass, Teacher, Student, Subject } from '../../types';
+import { SchoolClass } from '../../types';
 import Button from '../Shared/Button';
 import Input from '../Shared/Input';
 import Modal from '../Shared/Modal';
@@ -20,9 +20,9 @@ const AdminClassManagement: React.FC = () => {
   const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
   
   const [className, setClassName] = useState('');
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null | undefined>(undefined);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [classDescription, setClassDescription] = useState('');
-  const [selectedTeacherId, setSelectedTeacherId] = useState<string | null | undefined>(undefined);
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
@@ -38,32 +38,36 @@ const AdminClassManagement: React.FC = () => {
   if (!context) return null;
   const { schoolClasses, teachers, students, subjects, addSchoolClass, updateSchoolClass, deleteSchoolClass, addNotificationDirectly } = context;
 
-  const getTeacherName = (teacherId?: string | null): string => {
-    if (!teacherId) return 'Unassigned';
-    const teacher = teachers.find(t => t.id === teacherId);
-    return teacher ? teacher.name : 'Unknown Teacher';
+  const getTeacherNames = (teacherIds?: string[]): string => {
+    if (!teacherIds || teacherIds.length === 0) return 'Unassigned';
+    return teacherIds.map(id => {
+      const teacher = teachers.find(t => t.id === id);
+      return teacher ? teacher.name : 'Unknown Teacher';
+    }).join(', ');
   };
   
-  const getSubjectName = (subjectId?: string | null): string => {
-    if (!subjectId) return 'N/A';
-    const subject = subjects.find(s => s.id === subjectId);
-    return subject ? subject.name : 'Unknown Subject';
+  const getSubjectNames = (subjectIds?: string[]): string => {
+    if (!subjectIds || subjectIds.length === 0) return 'N/A';
+    return subjectIds.map(id => {
+      const subject = subjects.find(s => s.id === id);
+      return subject ? subject.name : 'Unknown Subject';
+    }).join(', ');
   };
 
   const sortedAndFilteredSchoolClasses = useMemo(() => {
     let processableClasses = schoolClasses.map(sc => ({
       ...sc,
-      subjectName: getSubjectName(sc.subjectId),
-      teacherName: getTeacherName(sc.teacherId),
+      subjectName: getSubjectNames(sc.subjectIds),
+      teacherName: getTeacherNames(sc.teacherIds),
       studentCount: sc.studentIds.length,
     }));
 
     // Apply filters
     if (filterTeacherId) {
-      processableClasses = processableClasses.filter(sc => sc.teacherId === filterTeacherId);
+      processableClasses = processableClasses.filter(sc => sc.teacherIds && sc.teacherIds.includes(filterTeacherId));
     }
     if (filterSubjectId) {
-      processableClasses = processableClasses.filter(sc => sc.subjectId === filterSubjectId);
+      processableClasses = processableClasses.filter(sc => sc.subjectIds && sc.subjectIds.includes(filterSubjectId));
     }
 
     // Apply sort
@@ -109,8 +113,8 @@ const AdminClassManagement: React.FC = () => {
       setNameError('Class name is required.');
       isValid = false;
     }
-    if (selectedSubjectId === undefined || selectedSubjectId === null || selectedSubjectId === '') {
-        setSubjectError('Subject is required.');
+    if (!selectedSubjectIds || selectedSubjectIds.length === 0) {
+        setSubjectError('At least one subject is required.');
         isValid = false;
     }
     return isValid;
@@ -125,39 +129,41 @@ const AdminClassManagement: React.FC = () => {
     setTimeout(() => {
       const classDataPayload = {
         name: className,
-        subjectId: selectedSubjectId, 
+        subjectIds: selectedSubjectIds,
         description: classDescription,
-        teacherId: selectedTeacherId, 
+        teacherIds: selectedTeacherIds,
         studentIds: selectedStudentIds,
       };
 
       if (editingClass) {
-          const updatedClassData: SchoolClass = {
-              ...editingClass,
-              ...classDataPayload,
-              subjectId: classDataPayload.subjectId || null, 
-          };
-          updateSchoolClass(updatedClassData); 
-          addNotificationDirectly('Class Updated', `Class "${className}" has been updated.`, 'success');
+        const updatedClassData: SchoolClass = {
+          ...editingClass,
+          ...classDataPayload,
+        };
+        updateSchoolClass(updatedClassData);
+        addNotificationDirectly('Class Updated', `Class \"${className}\" has been updated.`, 'success');
       } else {
-        const newClass = addSchoolClass(className, classDataPayload.subjectId || null, classDescription);
-         updateSchoolClass({
-             ...newClass, 
-             teacherId: selectedTeacherId,
-             studentIds: selectedStudentIds,
-         });
-         addNotificationDirectly('Class Added', `Class "${className}" has been added.`, 'success');
+        addSchoolClass(className, classDataPayload.subjectIds, classDescription).then(newClass => {
+          if (newClass) {
+            updateSchoolClass({
+              ...newClass,
+              teacherIds: selectedTeacherIds,
+              studentIds: selectedStudentIds,
+            });
+            addNotificationDirectly('Class Added', `Class \"${className}\" has been added.`, 'success');
+          }
+        });
       }
       setIsSubmitting(false);
       closeModalAndResetForm();
-    }, 1000); 
+    }, 1000);
   };
   
   const resetFormFieldsAndErrors = () => {
     setClassName('');
-    setSelectedSubjectId(subjects.length > 0 ? subjects[0].id : undefined); 
+    setSelectedSubjectIds([]);
     setClassDescription('');
-    setSelectedTeacherId(undefined); 
+    setSelectedTeacherIds([]);
     setSelectedStudentIds([]);
     setNameError('');
     setSubjectError('');
@@ -166,18 +172,15 @@ const AdminClassManagement: React.FC = () => {
   const openAddModal = () => {
     setEditingClass(null);
     resetFormFieldsAndErrors();
-    if (subjects.length > 0 && selectedSubjectId === undefined) {
-      setSelectedSubjectId(subjects[0].id); 
-    }
     setIsModalOpen(true);
   };
 
   const openEditModal = (schoolClass: SchoolClass) => {
     setEditingClass(schoolClass);
     setClassName(schoolClass.name);
-    setSelectedSubjectId(schoolClass.subjectId);
+    setSelectedSubjectIds(schoolClass.subjectIds || []);
     setClassDescription(schoolClass.description || '');
-    setSelectedTeacherId(schoolClass.teacherId);
+    setSelectedTeacherIds(schoolClass.teacherIds || []);
     setSelectedStudentIds([...schoolClass.studentIds]);
     setNameError('');
     setSubjectError('');
@@ -188,6 +191,12 @@ const AdminClassManagement: React.FC = () => {
     setIsModalOpen(false);
     setEditingClass(null);
     resetFormFieldsAndErrors();
+  };
+
+  const handleTeacherSelection = (teacherId: string) => {
+    setSelectedTeacherIds(prev =>
+      prev.includes(teacherId) ? prev.filter(id => id !== teacherId) : [...prev, teacherId]
+    );
   };
 
   const handleStudentSelection = (studentId: string) => {
@@ -318,7 +327,7 @@ const AdminClassManagement: React.FC = () => {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModalAndResetForm} title={editingClass ? "Edit Class" : "Add New Class"}>
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+        <form onSubmit={handleFormSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
           <Input
             label="Class Name"
             type="text"
@@ -329,23 +338,30 @@ const AdminClassManagement: React.FC = () => {
             disabled={isSubmitting}
             error={nameError}
           />
-           <div>
-            <label htmlFor="subject-select" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-            <select
-              id="subject-select"
-              value={selectedSubjectId || ''} 
-              onChange={(e) => {setSelectedSubjectId(e.target.value); if(subjectError) setSubjectError('');}}
-              className={`mt-1 block w-full px-4 py-3 border ${subjectError ? 'border-red-500' : 'border-gray-300'} bg-white rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
-              required
-              disabled={isSubmitting}
-            >
-              <option value="" disabled>Select a subject</option>
-              {subjects.map(subject => (
-                <option key={subject.id} value={subject.id}>{subject.name}</option>
-              ))}
-            </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Subjects</label>
+            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
+              {subjects.length > 0 ? subjects.map(subject => (
+                <label key={subject.id} className={`flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md ${isSubmitting ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSubjectIds.includes(subject.id)}
+                    onChange={() => {
+                      setSelectedSubjectIds(prev =>
+                        prev.includes(subject.id)
+                          ? prev.filter(id => id !== subject.id)
+                          : [...prev, subject.id]
+                      );
+                      if(subjectError) setSubjectError('');
+                    }}
+                    className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-sm text-gray-700">{subject.name}</span>
+                </label>
+              )) : <p className="text-xs text-gray-500">No subjects available. Please add subjects first in 'Manage Subjects'.</p>}
+            </div>
             {subjectError && <p className="mt-1 text-xs text-red-600">{subjectError}</p>}
-            {subjects.length === 0 && <p className="mt-1 text-xs text-yellow-600">No subjects available. Please add subjects first in 'Manage Subjects'.</p>}
           </div>
 
           <div>
@@ -362,19 +378,23 @@ const AdminClassManagement: React.FC = () => {
           </div>
           
           <div>
-            <label htmlFor="teacher-select" className="block text-sm font-medium text-gray-700 mb-1">Assign Teacher</label>
-            <select
-              id="teacher-select"
-              value={selectedTeacherId === null ? '' : selectedTeacherId || ''} 
-              onChange={(e) => setSelectedTeacherId(e.target.value === '' ? null : e.target.value)}
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              disabled={isSubmitting}
-            >
-              <option value="">Unassigned</option>
-              {teachers.map(teacher => (
-                <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
-              ))}
-            </select>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Assign Teachers</h4>
+            <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
+              {teachers.length > 0 ? teachers.map(teacher => (
+                <label key={teacher.id} className={`flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md ${isSubmitting ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={selectedTeacherIds.includes(teacher.id)}
+                    onChange={() => handleTeacherSelection(teacher.id)}
+                    disabled={isSubmitting}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">{teacher.name}</span>
+                </label>
+              )) : (
+                <p className="text-sm text-gray-500 italic">No teachers available</p>
+              )}
+            </div>
           </div>
 
           <div>

@@ -1,11 +1,12 @@
 import React, { useContext, useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../App';
-import { Teacher, UserRole, User as UserType, SchoolClass } from '../../types'; 
+import { Teacher, UserRole, User as UserType, SchoolClass } from '../../types';
 import Button from '../Shared/Button';
 import Input from '../Shared/Input';
 import Modal from '../Shared/Modal';
 
-type SortableTeacherKey = 'name' | 'subject';
+type SortableTeacherKey = 'name';
 type SortDirection = 'ascending' | 'descending';
 
 interface SortConfig {
@@ -14,11 +15,12 @@ interface SortConfig {
 }
 
 const AdminTeacherManagement: React.FC = () => {
+  const navigate = useNavigate();
   const context = useContext(AppContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [teacherName, setTeacherName] = useState('');
-  const [teacherSubject, setTeacherSubject] = useState('');
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingTeacherId, setDeletingTeacherId] = useState<string | null>(null);
@@ -32,8 +34,7 @@ const AdminTeacherManagement: React.FC = () => {
   const [userSelectError, setUserSelectError] = useState('');
 
   const [sortConfig, setSortConfig] = useState<SortConfig | null>({ key: 'name', direction: 'ascending' });
-  const [filterSubject, setFilterSubject] = useState<string>('');
-  const [uniqueSubjectsForFilter, setUniqueSubjectsForFilter] = useState<string[]>([]);
+  const [filterSubjectId, setFilterSubjectId] = useState<string>('');
 
 
   useEffect(() => {
@@ -48,14 +49,13 @@ const AdminTeacherManagement: React.FC = () => {
         }
 
         if (editingTeacher) {
-            const classesForTeacher = context.schoolClasses.filter(sc => sc.teacherId === editingTeacher.id);
+            const classesForTeacher = context.schoolClasses.filter(sc => sc.teacherIds.includes(editingTeacher.id));
             setAssignedClassesToEditingTeacher(classesForTeacher);
         } else {
             setAssignedClassesToEditingTeacher([]);
         }
         
-        const distinctSubjects = Array.from(new Set(context.teachers.map(t => t.subject))).sort();
-        setUniqueSubjectsForFilter(distinctSubjects);
+        // No longer needed: uniqueSubjectsForFilter
     }
   }, [context, editingTeacher, selectedUserId]);
 
@@ -64,25 +64,25 @@ const AdminTeacherManagement: React.FC = () => {
 
   const { teachers, addTeacher, updateTeacher, deleteTeacher, schoolClasses, subjects: allSubjects } = context;
 
-  const getSubjectName = (subjectId?: string | null): string => {
-    if (!subjectId) return 'N/A';
-    const subject = allSubjects.find(s => s.id === subjectId);
-    return subject ? subject.name : 'Unknown Subject';
+  const getSubjectNames = (subjectIds?: string[]): string => {
+    if (!subjectIds || subjectIds.length === 0) return 'N/A';
+    return subjectIds.map(id => {
+      const subject = allSubjects.find(s => s.id === id);
+      return subject ? subject.name : 'Unknown Subject';
+    }).join(', ');
   };
 
   const sortedAndFilteredTeachers = useMemo(() => {
     let processableTeachers = [...teachers];
-
     // Apply filter
-    if (filterSubject) {
-      processableTeachers = processableTeachers.filter(teacher => teacher.subject === filterSubject);
+    if (filterSubjectId) {
+      processableTeachers = processableTeachers.filter(teacher => teacher.subjectIds && teacher.subjectIds.includes(filterSubjectId));
     }
-
-    // Apply sort
+    // Only sort by name
     if (sortConfig !== null) {
       processableTeachers.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
+        const aValue = a.name;
+        const bValue = b.name;
         if (aValue < bValue) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
@@ -93,7 +93,7 @@ const AdminTeacherManagement: React.FC = () => {
       });
     }
     return processableTeachers;
-  }, [teachers, sortConfig, filterSubject]);
+  }, [teachers, sortConfig, filterSubjectId]);
 
   const requestSort = (key: SortableTeacherKey) => {
     let direction: SortDirection = 'ascending';
@@ -120,8 +120,8 @@ const AdminTeacherManagement: React.FC = () => {
       setNameError('Teacher name is required.');
       isValid = false;
     }
-    if (!teacherSubject.trim()) {
-      setSubjectError('Subject (Primary Specialization) is required.');
+    if (!selectedSubjectIds || selectedSubjectIds.length === 0) {
+      setSubjectError('At least one subject is required.');
       isValid = false;
     }
     if (!editingTeacher && availableUsers.length > 0 && !selectedUserId) {
@@ -140,7 +140,7 @@ const AdminTeacherManagement: React.FC = () => {
     setIsSubmitting(true);
     setTimeout(() => {
       if (editingTeacher) {
-        updateTeacher({...editingTeacher, name: teacherName, subject: teacherSubject });
+        updateTeacher({ ...editingTeacher, name: teacherName, subjectIds: selectedSubjectIds });
       } else {
         let newTeacherUserId = selectedUserId;
         if (!newTeacherUserId) { 
@@ -148,7 +148,7 @@ const AdminTeacherManagement: React.FC = () => {
             newTeacherUserId = `user_mock_${tempUsername}`; 
             console.warn(`Mock creating teacher linked to a generated mock user ID: ${newTeacherUserId}. In a real system, a User account must exist or be created first.`);
         }
-        addTeacher(teacherName, teacherSubject, newTeacherUserId);
+        addTeacher(teacherName, selectedSubjectIds, newTeacherUserId);
       }
       setIsSubmitting(false);
       closeModalAndResetForm();
@@ -157,7 +157,7 @@ const AdminTeacherManagement: React.FC = () => {
 
   const resetFormFieldsAndErrors = () => {
     setTeacherName('');
-    setTeacherSubject('');
+    setSelectedSubjectIds([]);
     setSelectedUserId(availableUsers.length > 0 ? availableUsers[0].uid : ''); 
     setNameError('');
     setSubjectError('');
@@ -179,12 +179,12 @@ const AdminTeacherManagement: React.FC = () => {
   const openEditModal = (teacher: Teacher) => {
     setEditingTeacher(teacher);
     setTeacherName(teacher.name);
-    setTeacherSubject(teacher.subject);
+    setSelectedSubjectIds(teacher.subjectIds || []);
     setSelectedUserId(teacher.userId); 
     setNameError('');
     setSubjectError('');
     setUserSelectError('');
-    const classesForTeacher = schoolClasses.filter(sc => sc.teacherId === teacher.id);
+    const classesForTeacher = schoolClasses.filter(sc => sc.teacherIds.includes(teacher.id));
     setAssignedClassesToEditingTeacher(classesForTeacher);
     setIsModalOpen(true);
   };
@@ -232,13 +232,13 @@ const AdminTeacherManagement: React.FC = () => {
             <label htmlFor="subject-filter" className="block text-sm font-medium text-gray-700">Filter by Subject:</label>
             <select
                 id="subject-filter"
-                value={filterSubject}
-                onChange={(e) => setFilterSubject(e.target.value)}
+                value={filterSubjectId}
+                onChange={(e) => setFilterSubjectId(e.target.value)}
                 className="mt-1 block w-full sm:w-56 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md shadow-sm"
             >
                 <option value="">All Subjects</option>
-                {uniqueSubjectsForFilter.map(subj => (
-                    <option key={subj} value={subj}>{subj}</option>
+                {allSubjects.map(subject => (
+                    <option key={subject.id} value={subject.id}>{subject.name}</option>
                 ))}
             </select>
         </div>
@@ -251,7 +251,7 @@ const AdminTeacherManagement: React.FC = () => {
             <thead className="bg-gray-50">
                 <tr>
                 <SortableHeader sortKey="name" label="Name" />
-                <SortableHeader sortKey="subject" label="Primary Specialization" />
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subjects</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Linked User ID</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -260,21 +260,30 @@ const AdminTeacherManagement: React.FC = () => {
                 {sortedAndFilteredTeachers.map((teacher) => (
                 <tr key={teacher.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{teacher.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{teacher.subject}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getSubjectNames(teacher.subjectIds)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{teacher.userId}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Button 
-                        onClick={() => openEditModal(teacher)} 
-                        variant="secondary" 
-                        size="sm" 
+                    <Button
+                        onClick={() => navigate(`/admin/teachers/${teacher.id}`)}
+                        variant="ghost"
+                        size="sm"
+                        className="mr-2"
+                        disabled={deletingTeacherId === teacher.id}
+                    >
+                        View Profile
+                    </Button>
+                    <Button
+                        onClick={() => openEditModal(teacher)}
+                        variant="secondary"
+                        size="sm"
                         className="mr-2"
                         disabled={deletingTeacherId === teacher.id}
                     >
                         Edit
                     </Button>
-                    <Button 
-                        onClick={() => handleDeleteTeacher(teacher)} 
-                        variant="danger" 
+                    <Button
+                        onClick={() => handleDeleteTeacher(teacher)}
+                        variant="danger"
                         size="sm"
                         loading={deletingTeacherId === teacher.id}
                     >
@@ -286,7 +295,7 @@ const AdminTeacherManagement: React.FC = () => {
                 {sortedAndFilteredTeachers.length === 0 && (
                     <tr>
                         <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                            {filterSubject ? `No teachers found for subject "${filterSubject}".` : "No teachers found. Add a new teacher to get started."}
+                            {filterSubjectId ? `No teachers found for subject "${filterSubjectId}".` : "No teachers found. Add a new teacher to get started."}
                         </td>
                     </tr>
                 )}
@@ -307,16 +316,31 @@ const AdminTeacherManagement: React.FC = () => {
             disabled={isSubmitting}
             error={nameError}
           />
-          <Input
-            label="Primary Specialization"
-            type="text"
-            value={teacherSubject}
-            onChange={(e) => { setTeacherSubject(e.target.value); if(subjectError) setSubjectError(''); }}
-            placeholder="e.g., Mathematics, History"
-            required
-            disabled={isSubmitting}
-            error={subjectError}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Subjects Taught</label>
+            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
+              {allSubjects.length > 0 ? allSubjects.map(subject => (
+                <label key={subject.id} className={`flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md ${isSubmitting ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSubjectIds.includes(subject.id)}
+                    onChange={() => {
+                      setSelectedSubjectIds(prev =>
+                        prev.includes(subject.id)
+                          ? prev.filter(id => id !== subject.id)
+                          : [...prev, subject.id]
+                      );
+                      if(subjectError) setSubjectError('');
+                    }}
+                    className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-sm text-gray-700">{subject.name}</span>
+                </label>
+              )) : <p className="text-xs text-gray-500">No subjects available. Please add subjects first in 'Manage Subjects'.</p>}
+            </div>
+            {subjectError && <p className="mt-1 text-xs text-red-600">{subjectError}</p>}
+          </div>
           {!editingTeacher && (
              availableUsers.length > 0 ? (
                 <div>
@@ -354,7 +378,7 @@ const AdminTeacherManagement: React.FC = () => {
                     <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-md">
                         {assignedClassesToEditingTeacher.map(sc => (
                             <li key={sc.id} className="text-sm text-gray-600">
-                                {sc.name} <span className="text-xs text-gray-500">({getSubjectName(sc.subjectId)})</span>
+                                {sc.name} <span className="text-xs text-gray-500">({getSubjectNames(sc.subjectIds)})</span>
                             </li>
                         ))}
                     </ul>

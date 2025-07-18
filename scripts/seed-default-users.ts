@@ -2,14 +2,15 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, setDoc, doc } from 'firebase/firestore';
 
+// Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyC4pNswgfUT_jOQDtdJ3qoJ7oZmcMcU3a0",
-  authDomain: "edutrack-sis.firebaseapp.com",
-  projectId: "edutrack-sis",
-  storageBucket: "edutrack-sis.firebasestorage.app",
-  messagingSenderId: "729998527249",
-  appId: "1:729998527249:web:99576da4080eb5e4a51ab0",
-  measurementId: "G-73YCMRF5KK"
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VITE_FIREBASE_APP_ID,
+  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);

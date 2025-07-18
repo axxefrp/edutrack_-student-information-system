@@ -35,7 +35,7 @@ const TeacherGradebookScreen: React.FC = () => {
   const { currentUser, schoolClasses, students, grades, addGrade, updateGrade, deleteGrade } = context;
   const teacherId = currentUser.teacherId;
 
-  const teacherAssignedClasses = schoolClasses.filter(sc => sc.teacherId === teacherId);
+  const teacherAssignedClasses = schoolClasses.filter(sc => sc.teacherIds.includes(teacherId));
   const selectedClass = schoolClasses.find(sc => sc.id === selectedClassId);
   const studentsInSelectedClass = selectedClass ? students.filter(s => selectedClass.studentIds.includes(s.id)) : [];
 

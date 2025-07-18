@@ -14,7 +14,7 @@ const TeacherMyClassesScreen: React.FC = () => {
   const { currentUser, schoolClasses, students } = context;
   const teacherId = currentUser.teacherId;
 
-  const assignedClasses = schoolClasses.filter(sc => sc.teacherId === teacherId);
+  const assignedClasses = schoolClasses.filter(sc => sc.teacherIds.includes(teacherId));
 
   const toggleExpandClass = (classId: string) => {
     setExpandedClassId(prevId => (prevId === classId ? null : classId));

@@ -1,5 +1,6 @@
 
 import React, { useContext, useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../App';
 import { Student, SchoolClass as SchoolClassType } from '../../types';
 import Button from '../Shared/Button';
@@ -15,6 +16,7 @@ interface SortConfig {
 }
 
 const AdminStudentManagement: React.FC = () => {
+  const navigate = useNavigate();
   const context = useContext(AppContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -24,6 +26,11 @@ const AdminStudentManagement: React.FC = () => {
   const [deletingStudentId, setDeletingStudentId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>({ key: 'name', direction: 'ascending' });
   const [enrolledClassesForEditingStudent, setEnrolledClassesForEditingStudent] = useState<SchoolClassType[]>([]);
+
+  // Enhanced search and filtering states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>('');
+  const [pointsRangeFilter, setPointsRangeFilter] = useState<{ min: string; max: string }>({ min: '', max: '' });
   
   const [filterGrade, setFilterGrade] = useState<string>(''); // '' for All Grades
   const [uniqueGrades, setUniqueGrades] = useState<number[]>([]);
@@ -37,36 +44,63 @@ const AdminStudentManagement: React.FC = () => {
 
   const { students, addStudent, updateStudent, deleteStudent, schoolClasses, teachers, subjects: allSubjects } = context;
 
+
   useEffect(() => {
     if (students) {
-      const grades = Array.from(new Set(students.map(s => s.grade))).sort((a,b) => a - b);
+      const grades = Array.from(new Set(students.map((s: Student) => s.grade))).sort((a: number, b: number) => a - b);
       setUniqueGrades(grades);
     }
   }, [students]);
 
+
   const getSubjectName = (subjectId?: string | null): string => {
     if (!subjectId) return 'N/A';
-    const subject = allSubjects.find(s => s.id === subjectId);
+    const subject = allSubjects.find((s: { id: string; name: string }) => s.id === subjectId);
     return subject ? subject.name : 'Unknown Subject';
   };
 
+
   const getTeacherName = (teacherId?: string | null): string => {
     if (!teacherId) return 'Unassigned';
-    const teacher = teachers.find(t => t.id === teacherId);
+    const teacher = teachers.find((t: { id: string; name: string }) => t.id === teacherId);
     return teacher ? teacher.name : 'Unknown Teacher';
   };
+
 
   const filteredAndSortedStudents = useMemo(() => {
     let processableStudents = [...students];
 
-    // Apply filter
+    // Apply text search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      processableStudents = processableStudents.filter((student: Student) =>
+        student.name.toLowerCase().includes(searchLower) ||
+        student.id.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply grade filter (keeping existing logic for backward compatibility)
     if (filterGrade !== '') {
-      processableStudents = processableStudents.filter(student => student.grade === parseInt(filterGrade, 10));
+      processableStudents = processableStudents.filter((student: Student) => student.grade === parseInt(filterGrade, 10));
+    }
+
+    // Apply enhanced grade filter
+    if (selectedGradeFilter !== '') {
+      processableStudents = processableStudents.filter((student: Student) => student.grade === parseInt(selectedGradeFilter, 10));
+    }
+
+    // Apply points range filter
+    if (pointsRangeFilter.min !== '' || pointsRangeFilter.max !== '') {
+      processableStudents = processableStudents.filter((student: Student) => {
+        const minPoints = pointsRangeFilter.min !== '' ? parseInt(pointsRangeFilter.min, 10) : -Infinity;
+        const maxPoints = pointsRangeFilter.max !== '' ? parseInt(pointsRangeFilter.max, 10) : Infinity;
+        return student.points >= minPoints && student.points <= maxPoints;
+      });
     }
 
     // Apply sort
     if (sortConfig !== null) {
-      processableStudents.sort((a, b) => {
+      processableStudents.sort((a: Student, b: Student) => {
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
 
@@ -83,7 +117,7 @@ const AdminStudentManagement: React.FC = () => {
       });
     }
     return processableStudents;
-  }, [students, sortConfig, filterGrade]);
+  }, [students, searchTerm, filterGrade, selectedGradeFilter, pointsRangeFilter, sortConfig]);
 
   const requestSort = (key: SortKey) => {
     let direction: SortDirection = 'ascending';
@@ -120,22 +154,24 @@ const AdminStudentManagement: React.FC = () => {
     return isValid;
   };
 
-  const handleAddStudent = (e: React.FormEvent) => {
+  const handleAddStudent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
     }
-    
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
       if (editingStudent) {
-        updateStudent({...editingStudent, name: newStudentName, grade: Number(newStudentGrade)});
+        await updateStudent({ ...editingStudent, name: newStudentName, grade: Number(newStudentGrade) });
       } else {
-        addStudent(newStudentName, Number(newStudentGrade));
+        await addStudent(newStudentName, Number(newStudentGrade));
       }
       setIsSubmitting(false);
       closeModalAndResetForm();
-    }, 1000); 
+    } catch (err) {
+      setIsSubmitting(false);
+      // Optionally show error notification
+    }
   };
 
   const openAddModal = () => {
@@ -151,7 +187,7 @@ const AdminStudentManagement: React.FC = () => {
     setNewStudentGrade(student.grade);
     setNameError('');
     setGradeError('');
-    const classesForStudent = schoolClasses.filter(sc => sc.studentIds.includes(student.id));
+    const classesForStudent = schoolClasses.filter((sc: SchoolClassType) => sc.studentIds.includes(student.id));
     setEnrolledClassesForEditingStudent(classesForStudent);
     setIsModalOpen(true);
   };
@@ -170,17 +206,19 @@ const AdminStudentManagement: React.FC = () => {
     resetFormFieldsAndErrors();
   };
 
-  const handleDeleteStudent = (studentToDelete: Student) => {
+  const handleDeleteStudent = async (studentToDelete: Student) => {
     if (window.confirm(`Are you sure you want to delete ${studentToDelete.name}? This will also remove their grades and points records.`)) {
       setDeletingStudentId(studentToDelete.id);
-      setTimeout(() => {
-        deleteStudent(studentToDelete.id);
-        setDeletingStudentId(null);
-      }, 1000); 
+      try {
+        await deleteStudent(studentToDelete.id);
+      } catch (err) {
+        // Optionally show error notification
+      }
+      setDeletingStudentId(null);
     }
   };
   
-  const SortableHeader: React.FC<{ sortKey: SortKey; label: string; className?: string }> = ({ sortKey, label, className }) => (
+  const SortableHeader: React.FC<{ sortKey: SortKey; label: string; className?: string }> = ({ sortKey, label, className }: { sortKey: SortKey; label: string; className?: string }) => (
     <th 
         scope="col" 
         className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 ${className || ''}`}
@@ -203,22 +241,93 @@ const AdminStudentManagement: React.FC = () => {
         <Button onClick={openAddModal} variant="primary" className="w-full sm:w-auto">Add New Student</Button>
       </div>
 
-      <div className="mb-4 flex flex-col sm:flex-row gap-4 items-center">
-        <div className="w-full sm:w-auto">
-            <label htmlFor="grade-filter" className="block text-sm font-medium text-gray-700">Filter by Grade:</label>
+      {/* Enhanced Search and Filtering */}
+      <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Search & Filter Students</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Search Input */}
+          <div>
+            <label htmlFor="student-search" className="block text-sm font-medium text-gray-700 mb-1">
+              Search Students
+            </label>
+            <Input
+              id="student-search"
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name or ID..."
+              className="w-full"
+            />
+          </div>
+
+          {/* Grade Filter */}
+          <div>
+            <label htmlFor="grade-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Grade
+            </label>
             <select
-                id="grade-filter"
-                value={filterGrade}
-                onChange={(e) => setFilterGrade(e.target.value)}
-                className="mt-1 block w-full sm:w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md shadow-sm"
+              id="grade-filter"
+              value={selectedGradeFilter}
+              onChange={(e) => setSelectedGradeFilter(e.target.value)}
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md shadow-sm"
             >
-                <option value="">All Grades</option>
-                {uniqueGrades.map(grade => (
-                    <option key={grade} value={String(grade)}>Grade {grade}</option>
-                ))}
+              <option value="">All Grades</option>
+              {uniqueGrades.map((grade: number) => (
+                <option key={grade} value={String(grade)}>Grade {grade}</option>
+              ))}
             </select>
+          </div>
+
+          {/* Points Range Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Points Range
+            </label>
+            <div className="flex space-x-2">
+              <Input
+                type="number"
+                value={pointsRangeFilter.min}
+                onChange={(e) => setPointsRangeFilter(prev => ({ ...prev, min: e.target.value }))}
+                placeholder="Min"
+                className="w-full"
+              />
+              <Input
+                type="number"
+                value={pointsRangeFilter.max}
+                onChange={(e) => setPointsRangeFilter(prev => ({ ...prev, max: e.target.value }))}
+                placeholder="Max"
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          <div className="flex items-end">
+            <Button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedGradeFilter('');
+                setPointsRangeFilter({ min: '', max: '' });
+                setFilterGrade(''); // Clear legacy filter too
+              }}
+              variant="ghost"
+              size="sm"
+              className="w-full"
+            >
+              Clear Filters
+            </Button>
+          </div>
         </div>
-        {/* Future: Add Search Input here */}
+
+        {/* Results Summary */}
+        <div className="mt-3 text-sm text-gray-600">
+          Showing {filteredAndSortedStudents.length} of {students.length} students
+          {(searchTerm || selectedGradeFilter || pointsRangeFilter.min || pointsRangeFilter.max) && (
+            <span className="ml-2 text-blue-600">
+              (filtered)
+            </span>
+          )}
+        </div>
       </div>
 
 
@@ -234,24 +343,33 @@ const AdminStudentManagement: React.FC = () => {
                 </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAndSortedStudents.map((student) => (
+                {filteredAndSortedStudents.map((student: Student) => (
                 <tr key={student.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.grade}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.points}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Button 
-                        onClick={() => openEditModal(student)} 
-                        variant="secondary" 
-                        size="sm" 
+                    <Button
+                        onClick={() => navigate(`/admin/students/${student.id}`)}
+                        variant="ghost"
+                        size="sm"
+                        className="mr-2"
+                        disabled={deletingStudentId === student.id}
+                    >
+                        View Profile
+                    </Button>
+                    <Button
+                        onClick={() => openEditModal(student)}
+                        variant="secondary"
+                        size="sm"
                         className="mr-2"
                         disabled={deletingStudentId === student.id}
                     >
                         Edit
                     </Button>
-                    <Button 
-                        onClick={() => handleDeleteStudent(student)} 
-                        variant="danger" 
+                    <Button
+                        onClick={() => handleDeleteStudent(student)}
+                        variant="danger"
                         size="sm"
                         loading={deletingStudentId === student.id}
                     >
@@ -305,7 +423,7 @@ const AdminStudentManagement: React.FC = () => {
                         <li key={sc.id} className="text-sm text-gray-600">
                             {sc.name} 
                             <span className="text-xs text-gray-500">
-                                ({getSubjectName(sc.subjectId)} - Taught by: {getTeacherName(sc.teacherId)})
+                                ({getSubjectName(sc.subjectIds[0])} - Taught by: {getTeacherName(sc.teacherId)})
                             </span>
                         </li>
                     ))}

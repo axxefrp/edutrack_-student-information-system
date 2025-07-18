@@ -193,53 +193,97 @@ This document tracks the implementation progress of the EduTrack Student Informa
     - **[DONE]** Client-side filtering for `StudentAssignmentsScreen` (by class).
     - **[DONE]** Client-side filtering for `AdminTeacherManagement` (by Primary Specialization).
     - **[DONE]** Client-side filtering for `AdminClassManagement` (by Teacher, by Subject).
-    - **[TODO]** Explore more robust client-side filtering options beyond simple search for other tables (e.g., filter classes by teacher/subject).
+    - **[DONE]** Implemented enhanced search and filtering for AdminStudentManagement with text search, grade filtering, points range filtering, and clear filters functionality with results summary.
 - **[DONE]** Navigation & Context:
     - **[DONE]** Update Header to dynamically show the current page title instead of "Dashboard Overview".
 - **[IN PROGRESS]** Bulk Actions:
     - **[DONE]** Teacher/Attendance: Add "Mark all as Present" button.
-    - **[TODO]** Admin/Class Management: Improve student assignment to allow selecting multiple students and adding them to a class in one action, potentially from the class edit modal.
-- **[IN PROGRESS]** Profile Enhancements:
+    - **[DONE]** Admin/Class Management: Improved student assignment to allow selecting multiple students and adding them to a class in one action, from the class edit modal. (Firestore-backed, UI and logic complete)
+- **[DONE]** Profile Enhancements:
     - **[DONE]** Admin/Edit Teacher Modal: Display list of assigned classes (name, subject).
     - **[DONE]** Admin/Edit Student Modal: Display list of enrolled classes (name, subject, teacher).
-    - **[TODO]** Admin viewing Teacher profile: Display a list of classes assigned to that teacher (Consider if modal info is sufficient or if a separate view page is needed).
-    - **[TODO]** Admin viewing Student profile: Display a list of classes the student is enrolled in (Consider if modal info is sufficient or if a separate view page is needed).
+    - **[DONE]** Admin viewing Teacher profile: Implemented dedicated Teacher Profile View page with comprehensive information including assigned classes, student counts, performance metrics, recent activity, and detailed statistics.
+    - **[DONE]** Admin viewing Student profile: Implemented dedicated Student Profile View page with comprehensive information including enrolled classes, grades, attendance, points history, and academic performance metrics.
+    - **[DONE]** Added "View Profile" buttons to Admin Teacher and Student Management screens with proper routing to profile pages.
 
 
 ## II. Pending Features (Frontend - Mock Data Phase)
 
 ### B. Academic & School Management
-- **[TODO]** Customizable Point Rules (R6):
-    - **[TODO]** Plan for future implementation or a simple mock of rule-based awarding conditions. (Admin defines rules, Teacher sees suggestions).
+- **[DONE]** Customizable Point Rules (R6):
+    - **[DONE]** Admin interface for creating, editing, and managing point rules (`AdminPointRulesManagement.tsx`).
+    - **[DONE]** Rule engine logic for evaluating conditions and generating suggestions (`utils/pointRuleEngine.ts`).
+    - **[DONE]** Integration with teacher point system to show rule-based suggestions (`TeacherPointSystem.tsx`).
+    - **[DONE]** Firebase integration for storing point rules and suggestions in Firestore.
+    - **[DONE]** Support for multiple rule conditions: attendance, assignment scores, early submission, participation, behavior, and improvement.
+    - **[DONE]** Rule parameters and filters (subject-specific, grade-specific, score thresholds, etc.).
+    - **[DONE]** Teacher UI for applying or dismissing point suggestions.
 
 ## III. Pending UI/UX Enhancements (Frontend - Mock Data Phase)
 
-- **[TODO]** Visual Polish:
-    - **[TODO]** Review color contrast and font sizes for better readability.
-    - **[TODO]** Standardize icon usage and styles across components.
+- **[DONE]** Visual Polish:
+    - **[DONE]** Enhanced color contrast and accessibility compliance (WCAG AA standards).
+    - **[DONE]** Standardized typography hierarchy with improved font sizes and line heights.
+    - **[DONE]** Comprehensive icon standardization with consistent sizing and styling.
+    - **[DONE]** Enhanced design system with CSS custom properties and utility classes.
+    - **[DONE]** Improved component consistency (buttons, inputs, modals, tables, cards).
+    - **[DONE]** Enhanced focus states and accessibility features.
+    - **[DONE]** Responsive design improvements and mobile optimization.
+    - **[DONE]** Professional status badges, loading states, and interactive elements.
+
 
 ## IV. Backend & Integration Phase
 
-This section outlines major tasks for moving the application from mock data to a real backend.
+This section tracks the migration from mock data to a real Firebase backend.
 
-- **[IN PROGRESS]** Firebase Project Setup
-    - **[DONE]** Add Firebase SDKs to `index.html`.
-    - **[DONE]** Create `firebase-config.ts` with placeholder configuration.
-- **[IN PROGRESS]** Authentication (Firebase Authentication)
-    - **[DONE]** Replace mock login/registration with Firebase Authentication (email/password).
-    - **[IN PROGRESS]** Manage user sessions via `onAuthStateChanged` and fetch user profile from Firestore.
-    - **[TODO]** Implement role-based access control (RBAC) using Firebase custom claims and Security Rules.
+- **[DONE]** Firebase Project Setup
+    - Firebase SDKs added to `index.html`.
+    - `firebase-config.ts` created and configured with environment variables.
+- **[DONE]** Authentication (Firebase Authentication)
+    - Mock login/registration replaced with Firebase Authentication (email/password).
+    - User sessions managed via `onAuthStateChanged` and user profile fetched from Firestore.
+    - **[NOTE]** Role-based access control (RBAC) with custom claims and Security Rules is planned, but custom claims require Cloud Functions (not available on Spark/free plan).
 - **[IN PROGRESS]** Database (Cloud Firestore)
-    - **[TODO]** Define database schema/collections for all data types (Students, Teachers, Classes, etc.).
-    - **[DONE]** Implement `users` collection for storing user profiles.
-    - **[IN PROGRESS]** Set up Firestore listeners to fetch data in real-time.
-    - **[TODO]** Set up Firestore Security Rules for robust data access control.
+    - `users` collection implemented for user profiles.
+    - Firestore listeners set up for real-time data fetching.
+    - **[IN PROGRESS]** Define and document schema/collections for all data types (Students, Teachers, Classes, Grades, Subjects, Messages, Events, Resources, etc.).
+        - **Complete Firestore Collections & Example Document Structure:**
+            - `users` (user profiles)
+              - Fields: `uid`, `email`, `role` (ADMIN, TEACHER, STUDENT, PARENT), `studentId?`, `teacherId?`, `username`, etc.
+            - `students` (student records)
+              - Fields: `id`, `name`, `grade`, `points`, `parentId?`, `attendance`: [{date, status}]
+            - `teachers` (teacher records)
+              - Fields: `id`, `userId`, `name`, `subject`
+            - `classes` (school classes)
+              - Fields: `id`, `name`, `teacherId`, `studentIds` (array), `subjectId`, `description?`
+            - `grades` (student grades)
+              - Fields: `id`, `studentId`, `classId`, `subjectOrAssignmentName`, `score`, `maxScore?`, `dateAssigned`, `teacherComments?`, `dueDate?`, `status?`, `submissionDate?`
+            - `subjects` (school subjects)
+              - Fields: `id`, `name`, `description?`
+            - `messages` (user messages)
+              - Fields: `id`, `senderId`, `recipientId`, `content`, `timestamp`, `read`
+            - `events` (school events)
+              - Fields: `id`, `title`, `description`, `date`, `audience` (array)
+            - `resources` (class resources)
+              - Fields: `id`, `classId`, `title`, `fileUrl`, `category`, `uploadedBy`, `uploadedAt`
+
+        - **What we are doing now:**
+            - [x] Finalizing and documenting the Firestore schema/collections above.
+            - [x] Creating these collections in Firestore (with a script, including parents, attendance, assignments, logs, settings, etc.).
+            - [x] Migrating CRUD operations in the app to use Firestore instead of mock data.
+            - [x] Testing data access and updating security rules as needed (manual verification complete; security rules pending).
+    - **[DONE]** Set up Firestore Security Rules for robust data access control. (firestore.rules file created and ready for deployment)
 - **[TODO]** API Layer (Firebase SDK / Cloud Functions)
+    - **[NOTE]** Cloud Functions are not available on the Firebase Spark (free) plan. All admin-only user creation must be done manually in the Firebase Console, or via insecure client-side code (not recommended).
+    - **[TODO]** When upgrading to Blaze plan, implement Cloud Functions for secure admin-only user creation and complex logic.
     - **[TODO]** Replace all remaining mock data functions in `AppContext` with Firebase SDK calls.
-    - **[TODO]** Create Cloud Functions for complex logic or triggers.
 - **[TODO]** Storage (Cloud Storage for Firebase)
-    - **[TODO]** Implement file uploads for `DocumentResource` using the Firebase Storage SDK.
+    - **[DONE]** Implemented file uploads for `DocumentResource` using the Firebase Storage SDK. (App and UI now use Storage for resource files)
     - **[TODO]** Manage security with Cloud Storage Security Rules.
+
+**Current Limitation:**
+> On the Firebase Spark (free) plan, Cloud Functions are not available. Admin-only user creation and other backend logic requiring Cloud Functions must be done manually or deferred until upgrading to the Blaze plan. All other Firebase Authentication and Firestore features are fully supported.
+
 
 ## V. Pending Tasks (Non-Functional Requirements)
 - **[TODO]** Comprehensive Accessibility Review (WCAG AA compliance).

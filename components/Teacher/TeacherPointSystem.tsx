@@ -1,6 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useMemo } from 'react';
 import { AppContext } from '../../App';
-import { Student } from '../../types';
+import { Student, PointRuleSuggestion } from '../../types';
 import Button from '../Shared/Button';
 import Input from '../Shared/Input';
 import Modal from '../Shared/Modal';
@@ -13,6 +13,7 @@ const TeacherPointSystem: React.FC = () => {
   const [reason, setReason] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Validation errors
   const [pointsError, setPointsError] = useState('');
@@ -20,7 +21,36 @@ const TeacherPointSystem: React.FC = () => {
 
   if (!context || !context.currentUser) return null;
 
-  const { students, awardPoints, currentUser } = context;
+  const { students, awardPoints, currentUser, pointRuleSuggestions, generatePointSuggestions, applyPointSuggestion, dismissPointSuggestion } = context;
+
+  // Get suggestions for current teacher
+  const teacherSuggestions = useMemo(() => {
+    return pointRuleSuggestions.filter(suggestion =>
+      suggestion.teacherId === currentUser.uid && !suggestion.isApplied
+    );
+  }, [pointRuleSuggestions, currentUser.uid]);
+
+  // Get suggestions for selected student
+  const selectedStudentSuggestions = useMemo(() => {
+    if (!selectedStudent) return [];
+    return generatePointSuggestions(selectedStudent.id, currentUser.uid);
+  }, [selectedStudent, generatePointSuggestions, currentUser.uid]);
+
+  const handleApplySuggestion = async (suggestion: PointRuleSuggestion) => {
+    try {
+      await applyPointSuggestion(suggestion.id);
+    } catch (error) {
+      console.error('Error applying suggestion:', error);
+    }
+  };
+
+  const handleDismissSuggestion = async (suggestion: PointRuleSuggestion) => {
+    try {
+      await dismissPointSuggestion(suggestion.id);
+    } catch (error) {
+      console.error('Error dismissing suggestion:', error);
+    }
+  };
 
   const validateForm = (): boolean => {
     let isValid = true;
@@ -85,13 +115,70 @@ const TeacherPointSystem: React.FC = () => {
       <h1 className="text-2xl font-semibold text-gray-800 mb-6">Award Points to Students</h1>
       
       <div className="mb-6">
-        <Input 
+        <Input
           label="Search Students"
           placeholder="Enter student name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
+
+      {/* Point Rule Suggestions */}
+      {teacherSuggestions.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">Point Suggestions</h2>
+            <Button
+              onClick={() => setShowSuggestions(!showSuggestions)}
+              variant="ghost"
+              size="sm"
+            >
+              {showSuggestions ? 'Hide' : 'Show'} ({teacherSuggestions.length})
+            </Button>
+          </div>
+
+          {showSuggestions && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="space-y-3">
+                {teacherSuggestions.map((suggestion) => {
+                  const student = students.find(s => s.id === suggestion.studentId);
+                  return (
+                    <div key={suggestion.id} className="bg-white p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <span className="font-medium text-gray-900">{student?.name}</span>
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                              +{suggestion.suggestedPoints} points
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600">{suggestion.reason}</p>
+                        </div>
+                        <div className="flex space-x-2 ml-4">
+                          <Button
+                            onClick={() => handleApplySuggestion(suggestion)}
+                            variant="primary"
+                            size="sm"
+                          >
+                            Apply
+                          </Button>
+                          <Button
+                            onClick={() => handleDismissSuggestion(suggestion)}
+                            variant="ghost"
+                            size="sm"
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {filteredStudents.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -121,8 +208,37 @@ const TeacherPointSystem: React.FC = () => {
 
       {selectedStudent && (
         <Modal isOpen={isModalOpen} onClose={closeModalAndResetForm} title={`Award Points to ${selectedStudent.name}`}>
-          <form onSubmit={handleAwardPoints} className="space-y-4">
-            <Input
+          <div className="space-y-4">
+            {/* Student-specific suggestions */}
+            {selectedStudentSuggestions.length > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-yellow-800 mb-3">Suggested Point Awards:</h4>
+                <div className="space-y-2">
+                  {selectedStudentSuggestions.map((suggestion, index) => (
+                    <div key={index} className="flex items-center justify-between bg-white p-3 rounded border border-yellow-200">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">+{suggestion.suggestedPoints} points</span>
+                        <p className="text-xs text-gray-600">{suggestion.reason}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setPointsToAward(suggestion.suggestedPoints);
+                          setReason(suggestion.reason);
+                        }}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        Use
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleAwardPoints} className="space-y-4">
+              <Input
               label="Points"
               type="number"
               value={pointsToAward === '' ? '' : String(pointsToAward)}
@@ -148,7 +264,8 @@ const TeacherPointSystem: React.FC = () => {
               <Button type="submit" variant="primary" loading={isSubmitting} disabled={isSubmitting}>Award Points</Button>
             </div>
           </form>
-        </Modal>
+        </div>
+      </Modal>
       )}
     </div>
   );

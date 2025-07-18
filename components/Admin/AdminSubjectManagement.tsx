@@ -34,7 +34,7 @@ const AdminSubjectManagement: React.FC = () => {
   const sortedSubjects = useMemo(() => {
     let mappedSubjects = subjects.map(subject => ({
       ...subject,
-      linkedClassCount: schoolClasses.filter(sc => sc.subjectId === subject.id).length,
+      linkedClassCount: schoolClasses.filter(sc => sc.subjectIds && sc.subjectIds.includes(subject.id)).length,
     }));
 
     if (sortConfig !== null) {
@@ -78,22 +78,19 @@ const AdminSubjectManagement: React.FC = () => {
     return true;
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
     setIsSubmitting(true);
-    setTimeout(() => {
-      if (editingSubject) {
-        updateSubject({ ...editingSubject, name: subjectName, description: subjectDescription });
-        addNotificationDirectly('Subject Updated', `Subject "${subjectName}" has been updated.`, 'success');
-      } else {
-        addSubject(subjectName, subjectDescription);
-        addNotificationDirectly('Subject Added', `Subject "${subjectName}" has been added.`, 'success');
-      }
-      setIsSubmitting(false);
-      closeModalAndResetForm();
-    }, 1000); 
+    if (editingSubject) {
+      await updateSubject({ ...editingSubject, name: subjectName, description: subjectDescription });
+      addNotificationDirectly('Subject Updated', `Subject "${subjectName}" has been updated.`, 'success');
+    } else {
+      await addSubject(subjectName, subjectDescription);
+      addNotificationDirectly('Subject Added', `Subject "${subjectName}" has been added.`, 'success');
+    }
+    setIsSubmitting(false);
+    closeModalAndResetForm();
   };
   
   const resetFormFieldsAndErrors = () => {
@@ -123,7 +120,7 @@ const AdminSubjectManagement: React.FC = () => {
   };
 
   const handleDeleteSubject = (subjectToDelete: Subject) => {
-    const isSubjectLinked = schoolClasses.some(sc => sc.subjectId === subjectToDelete.id);
+    const isSubjectLinked = schoolClasses.some(sc => sc.subjectIds && sc.subjectIds.includes(subjectToDelete.id));
     let confirmMessage = `Are you sure you want to delete the subject "${subjectToDelete.name}"?`;
     if (isSubjectLinked) {
       confirmMessage += `\n\nWarning: This subject is currently linked to one or more classes. Deleting it will unlink it from these classes.`;
