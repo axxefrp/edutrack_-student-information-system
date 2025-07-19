@@ -423,7 +423,7 @@ const AdminStudentManagement: React.FC = () => {
                         <li key={sc.id} className="text-sm text-gray-600">
                             {sc.name} 
                             <span className="text-xs text-gray-500">
-                                ({getSubjectName(sc.subjectIds[0])} - Taught by: {getTeacherName(sc.teacherId)})
+                                ({getSubjectName(sc.subjectIds[0])} - Taught by: {getTeacherName(sc.teacherIds[0])})
                             </span>
                         </li>
                     ))}

@@ -30,8 +30,10 @@
   "dependencies": {
     "@google-cloud/firestore": "^7.11.2",
     "@heroicons/react": "^2.2.0",
+    "cli": "^1.0.1",
     "firebase": "^11.10.0",
     "firebase-admin": "^13.4.0",
+    "github": "^14.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
