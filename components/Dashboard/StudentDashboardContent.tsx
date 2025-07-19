@@ -2,7 +2,19 @@ import React, { useContext, useMemo } from 'react';
 import { Student, PointTransaction, Grade } from '../../types';
 import { AppContext } from '../../App';
 import { Link } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label, BarChart, Bar, Cell } from 'recharts';
+// Optimized imports for better tree shaking
+import { LineChart } from 'recharts/lib/chart/LineChart';
+import { Line } from 'recharts/lib/cartesian/Line';
+import { XAxis } from 'recharts/lib/cartesian/XAxis';
+import { YAxis } from 'recharts/lib/cartesian/YAxis';
+import { CartesianGrid } from 'recharts/lib/cartesian/CartesianGrid';
+import { Tooltip } from 'recharts/lib/component/Tooltip';
+import { Legend } from 'recharts/lib/component/Legend';
+import { ResponsiveContainer } from 'recharts/lib/component/ResponsiveContainer';
+import { Label } from 'recharts/lib/component/Label';
+import { BarChart } from 'recharts/lib/chart/BarChart';
+import { Bar } from 'recharts/lib/cartesian/Bar';
+import { Cell } from 'recharts/lib/component/Cell';
 
 interface StudentDashboardContentProps {
   student: Student;

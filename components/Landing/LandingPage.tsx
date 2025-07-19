@@ -8,7 +8,7 @@ import {
   ShieldCheckIcon,
   DevicePhoneMobileIcon
 } from '@heroicons/react/24/outline';
-import FirebaseConnectionTest from '../Shared/FirebaseConnectionTest';
+
 
 const LandingPage: React.FC = () => {
   const features = [
@@ -73,6 +73,29 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* Development Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 via-red-700 to-blue-600 dark:from-red-700 dark:via-red-800 dark:to-blue-700">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-600/90 to-blue-600/90 animate-pulse"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-center space-x-3 text-white">
+            <div className="flex items-center space-x-2 animate-bounce">
+              <span className="text-xl">🚧</span>
+              <span className="font-semibold text-sm sm:text-base">
+                This application is currently under development
+              </span>
+            </div>
+            <div className="hidden sm:block w-px h-4 bg-white/30"></div>
+            <div className="text-xs sm:text-sm text-white/90 animate-pulse">
+              Expect frequent updates and changes
+            </div>
+          </div>
+        </div>
+        {/* Sliding animation effect */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 animate-slide"></div>
+        </div>
+      </div>
 
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
@@ -157,20 +180,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Firebase Connection Test - Temporary for debugging */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              System Status
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              Firebase connectivity and data access status
-            </p>
-          </div>
-          <FirebaseConnectionTest />
-        </div>
-      </section>
+
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">

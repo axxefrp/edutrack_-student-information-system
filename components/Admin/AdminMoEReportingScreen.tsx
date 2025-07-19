@@ -18,7 +18,20 @@ import {
   LiberianStatus,
   LiberianProgressBar
 } from '../Shared/LiberianDesignSystem';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+// Optimized imports for better tree shaking
+import { BarChart } from 'recharts/lib/chart/BarChart';
+import { Bar } from 'recharts/lib/cartesian/Bar';
+import { XAxis } from 'recharts/lib/cartesian/XAxis';
+import { YAxis } from 'recharts/lib/cartesian/YAxis';
+import { CartesianGrid } from 'recharts/lib/cartesian/CartesianGrid';
+import { Tooltip } from 'recharts/lib/component/Tooltip';
+import { Legend } from 'recharts/lib/component/Legend';
+import { ResponsiveContainer } from 'recharts/lib/component/ResponsiveContainer';
+import { PieChart } from 'recharts/lib/chart/PieChart';
+import { Pie } from 'recharts/lib/polar/Pie';
+import { Cell } from 'recharts/lib/component/Cell';
+import { LineChart } from 'recharts/lib/chart/LineChart';
+import { Line } from 'recharts/lib/cartesian/Line';
 import Button from '../Shared/Button';
 
 interface EnrollmentStats {

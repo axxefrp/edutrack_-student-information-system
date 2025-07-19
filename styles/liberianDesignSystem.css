@@ -537,3 +537,52 @@
     border: 1px solid var(--liberian-gray-800) !important;
   }
 }
+
+/* ===== DEVELOPMENT BANNER ANIMATIONS ===== */
+/* Sliding animation for development banner */
+@keyframes slide {
+  0% {
+    transform: translateX(-100%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-12deg);
+  }
+}
+
+.animate-slide {
+  animation: slide 3s ease-in-out infinite;
+}
+
+/* Enhanced pulse animation for development banner */
+@keyframes enhanced-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-enhanced-pulse {
+  animation: enhanced-pulse 2s ease-in-out infinite;
+}
+
+/* Bounce animation with Liberian colors */
+@keyframes liberian-bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+.animate-liberian-bounce {
+  animation: liberian-bounce 1.5s ease-in-out infinite;
+}
