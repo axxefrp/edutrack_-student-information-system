@@ -18,6 +18,7 @@ declare global {
   }
 }
 import { evaluateRulesForStudents } from './utils/pointRuleEngine';
+import { createOptimizedListener, clearCache } from './utils/firebaseQueryOptimization';
 // Core components (loaded immediately)
 import LoginScreen from './components/Auth/LoginScreen';
 import RegisterScreen from './components/Auth/RegisterScreen';
@@ -90,20 +91,13 @@ const App: React.FC = () => {
 
   
   // Firebase Auth and Firestore listeners
-  // Firestore point transactions listener
+  // Optimized Firestore point transactions listener
   useEffect(() => {
-    const transactionsCollectionRef = collection(db, "pointTransactions");
-    const unsubscribeTransactions = onSnapshot(
-      transactionsCollectionRef,
-      (snapshot) => {
-        console.log('📊 Point transactions loaded:', snapshot.docs.length);
-        const transactionsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as PointTransaction));
-        setPointTransactions(transactionsData);
-      },
+    const unsubscribeTransactions = createOptimizedListener<PointTransaction>(
+      'pointTransactions',
+      (transactionsData) => setPointTransactions(transactionsData),
       (error) => {
-        console.error("❌ Error listening to point transactions:", error);
-        console.error("Error code:", error.code, "Error message:", error.message);
-        // Continue with empty array if there's an error
+        console.error("❌ Error in optimized point transactions listener:", error);
         setPointTransactions([]);
       }
     );
@@ -184,45 +178,49 @@ const App: React.FC = () => {
       }
     );
 
-    // Firestore students listener
-    const studentsCollectionRef = collection(db, "students");
-    const unsubscribeStudents = onSnapshot(
-      studentsCollectionRef,
-      (snapshot) => {
-        console.log('🎓 Students loaded:', snapshot.docs.length);
-        const studentsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Student));
-        setStudents(studentsData);
-      },
+    // Optimized Firestore students listener
+    const unsubscribeStudents = createOptimizedListener<Student>(
+      'students',
+      (studentsData) => setStudents(studentsData),
       (error) => {
-        console.error("❌ Error listening to students:", error);
-        console.error("Error code:", error.code, "Error message:", error.message);
+        console.error("❌ Error in optimized students listener:", error);
         setStudents([]);
       }
     );
 
-    // Firestore teachers listener
-    const teachersCollectionRef = collection(db, "teachers");
-    const unsubscribeTeachers = onSnapshot(teachersCollectionRef, (snapshot) => {
-      const teachersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Teacher));
-      console.log('Teachers loaded from Firestore:', teachersData.length, teachersData);
-      setTeachers(teachersData);
-    });
+    // Optimized Firestore teachers listener
+    const unsubscribeTeachers = createOptimizedListener<Teacher>(
+      'teachers',
+      (teachersData) => {
+        console.log('Teachers loaded from optimized Firestore:', teachersData.length, teachersData);
+        setTeachers(teachersData);
+      },
+      (error) => {
+        console.error("❌ Error in optimized teachers listener:", error);
+        setTeachers([]);
+      }
+    );
 
-    // Firestore classes listener
-    const classesCollectionRef = collection(db, "classes");
-    const unsubscribeClasses = onSnapshot(classesCollectionRef, (snapshot) => {
-      const classesData = snapshot.docs.map(doc => {
-        const data = doc.data();
+    // Optimized Firestore classes listener
+    const unsubscribeClasses = createOptimizedListener<SchoolClass>(
+      'classes',
+      (classesData) => {
         // Defensive: ensure subjectIds and teacherIds are always arrays
-        return {
-          ...data,
-          id: doc.id,
-          subjectIds: Array.isArray(data.subjectIds) ? data.subjectIds : [],
-          teacherIds: Array.isArray(data.teacherIds) ? data.teacherIds : (data.teacherId ? [data.teacherId] : []),
-        } as SchoolClass;
-      });
-      setSchoolClasses(classesData);
-    });
+        const processedClasses = classesData.map(classData => {
+          const data = classData as any; // Type assertion for legacy data compatibility
+          return {
+            ...classData,
+            subjectIds: Array.isArray(classData.subjectIds) ? classData.subjectIds : [],
+            teacherIds: Array.isArray(classData.teacherIds) ? classData.teacherIds : (data.teacherId ? [data.teacherId] : []),
+          };
+        });
+        setSchoolClasses(processedClasses);
+      },
+      (error) => {
+        console.error("❌ Error in optimized classes listener:", error);
+        setSchoolClasses([]);
+      }
+    );
 
     // Firestore subjects listener
     const subjectsCollectionRef = collection(db, "subjects");
@@ -239,12 +237,15 @@ const App: React.FC = () => {
       setSubjects(subjectsData as Subject[]);
     });
 
-    // Firestore grades listener
-    const gradesCollectionRef = collection(db, "grades");
-    const unsubscribeGrades = onSnapshot(gradesCollectionRef, (snapshot) => {
-      const gradesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Grade));
-      setGrades(gradesData);
-    });
+    // Optimized Firestore grades listener
+    const unsubscribeGrades = createOptimizedListener<Grade>(
+      'grades',
+      (gradesData) => setGrades(gradesData),
+      (error) => {
+        console.error("❌ Error in optimized grades listener:", error);
+        setGrades([]);
+      }
+    );
 
     // Firestore messages listener
     const messagesCollectionRef = collection(db, "messages");
@@ -311,6 +312,8 @@ const App: React.FC = () => {
   const logout = async (): Promise<void> => {
     try {
       await signOut(auth);
+      // Clear Firebase query cache to prevent memory leaks
+      clearCache();
     } catch (error) {
       console.error("Firebase Logout Error:", error);
     }
