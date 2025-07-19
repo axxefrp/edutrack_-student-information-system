@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 // import { ThemeProvider } from './hooks/useTheme';
 import { auth, db } from './firebase-config';
@@ -18,41 +18,52 @@ declare global {
   }
 }
 import { evaluateRulesForStudents } from './utils/pointRuleEngine';
+// Core components (loaded immediately)
 import LoginScreen from './components/Auth/LoginScreen';
 import RegisterScreen from './components/Auth/RegisterScreen';
 import LandingPage from './components/Landing/LandingPage';
 import MainLayout from './components/Layout/MainLayout';
 import DashboardScreen from './components/Dashboard/DashboardScreen';
-import AdminStudentManagement from './components/Admin/AdminStudentManagement';
-import AdminTeacherManagement from './components/Admin/AdminTeacherManagement';
-import AdminClassManagement from './components/Admin/AdminClassManagement';
-import AdminSubjectManagement from './components/Admin/AdminSubjectManagement';
-import AdminParentManagement from './components/Admin/AdminParentManagement';
-import AdminLeaderboardScreen from './components/Admin/AdminLeaderboardScreen';
-import AdminTeacherProfileView from './components/Admin/AdminTeacherProfileView';
-import AdminStudentProfileView from './components/Admin/AdminStudentProfileView';
-import AdminPointRulesManagement from './components/Admin/AdminPointRulesManagement';
-import SettingsScreen from './components/Settings/SettingsScreen';
-import TeacherPointSystem from './components/Teacher/TeacherPointSystem';
-import StudentProfilePage from './components/Student/StudentProfilePage';
-import TeacherAttendance from './components/Teacher/TeacherAttendance';
-import TeacherMyClassesScreen from './components/Teacher/TeacherMyClassesScreen';
-import TeacherGradebookScreen from './components/Teacher/TeacherGradebookScreen'; 
-import MessagingScreen from './components/Messaging/MessagingScreen';
-import SchoolCalendarScreen from './components/Calendar/SchoolCalendarScreen';
-import AdminReportsScreen from './components/Reporting/AdminReportsScreen';
-import TeacherReportsScreen from './components/Reporting/TeacherReportsScreen';
-import AdminMasterGradesheetScreen from './components/Admin/AdminMasterGradesheetScreen';
-import AdminMoEReportingScreen from './components/Admin/AdminMoEReportingScreen';
-import LiberianAcademicPlannerScreen from './components/Calendar/LiberianAcademicPlannerScreen';
-import LiberianCulturalShowcase from './components/Calendar/LiberianCulturalShowcase';
-import ComprehensiveTeacherGradebook from './components/Teacher/ComprehensiveTeacherGradebook';
-import TeacherMasterGradesheetScreen from './components/Teacher/TeacherMasterGradesheetScreen';
-import StudentScheduleScreen from './components/Student/StudentScheduleScreen';
-import StudentAssignmentsScreen from './components/Student/StudentAssignmentsScreen'; 
-import TeacherClassResourcesScreen from './components/Teacher/TeacherClassResources'; 
-import StudentClassResourcesScreen from './components/Student/StudentClassResources'; 
-import StudentLeaderboardScreen from './components/Student/StudentLeaderboardScreen';
+import LazyLoadingSpinner from './components/Shared/LazyLoadingSpinner';
+
+// Admin components (lazy loaded)
+const AdminStudentManagement = lazy(() => import('./components/Admin/AdminStudentManagement'));
+const AdminTeacherManagement = lazy(() => import('./components/Admin/AdminTeacherManagement'));
+const AdminClassManagement = lazy(() => import('./components/Admin/AdminClassManagement'));
+const AdminSubjectManagement = lazy(() => import('./components/Admin/AdminSubjectManagement'));
+const AdminParentManagement = lazy(() => import('./components/Admin/AdminParentManagement'));
+const AdminLeaderboardScreen = lazy(() => import('./components/Admin/AdminLeaderboardScreen'));
+const AdminTeacherProfileView = lazy(() => import('./components/Admin/AdminTeacherProfileView'));
+const AdminStudentProfileView = lazy(() => import('./components/Admin/AdminStudentProfileView'));
+const AdminPointRulesManagement = lazy(() => import('./components/Admin/AdminPointRulesManagement'));
+// Settings and shared components (lazy loaded)
+const SettingsScreen = lazy(() => import('./components/Settings/SettingsScreen'));
+const MessagingScreen = lazy(() => import('./components/Messaging/MessagingScreen'));
+
+// Teacher components (lazy loaded)
+const TeacherPointSystem = lazy(() => import('./components/Teacher/TeacherPointSystem'));
+const TeacherAttendance = lazy(() => import('./components/Teacher/TeacherAttendance'));
+const TeacherMyClassesScreen = lazy(() => import('./components/Teacher/TeacherMyClassesScreen'));
+const TeacherGradebookScreen = lazy(() => import('./components/Teacher/TeacherGradebookScreen'));
+const ComprehensiveTeacherGradebook = lazy(() => import('./components/Teacher/ComprehensiveTeacherGradebook'));
+const TeacherMasterGradesheetScreen = lazy(() => import('./components/Teacher/TeacherMasterGradesheetScreen'));
+const TeacherClassResourcesScreen = lazy(() => import('./components/Teacher/TeacherClassResources'));
+const TeacherReportsScreen = lazy(() => import('./components/Reporting/TeacherReportsScreen'));
+
+// Student components (lazy loaded)
+const StudentProfilePage = lazy(() => import('./components/Student/StudentProfilePage'));
+const StudentScheduleScreen = lazy(() => import('./components/Student/StudentScheduleScreen'));
+const StudentAssignmentsScreen = lazy(() => import('./components/Student/StudentAssignmentsScreen'));
+const StudentClassResourcesScreen = lazy(() => import('./components/Student/StudentClassResources'));
+const StudentLeaderboardScreen = lazy(() => import('./components/Student/StudentLeaderboardScreen'));
+
+// Calendar and reporting components (lazy loaded)
+const SchoolCalendarScreen = lazy(() => import('./components/Calendar/SchoolCalendarScreen'));
+const LiberianAcademicPlannerScreen = lazy(() => import('./components/Calendar/LiberianAcademicPlannerScreen'));
+const LiberianCulturalShowcase = lazy(() => import('./components/Calendar/LiberianCulturalShowcase'));
+const AdminReportsScreen = lazy(() => import('./components/Reporting/AdminReportsScreen'));
+const AdminMasterGradesheetScreen = lazy(() => import('./components/Admin/AdminMasterGradesheetScreen'));
+const AdminMoEReportingScreen = lazy(() => import('./components/Admin/AdminMoEReportingScreen'));
 
 
 export const AppContext = React.createContext<AppContextType | null>(null);
@@ -987,65 +998,213 @@ const App: React.FC = () => {
                   <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={logout}>Logout</button>
                 </div>
               </div>
-            ) : <MainLayout />
+            ) : (
+              <Suspense fallback={<LazyLoadingSpinner message="Loading application..." />}>
+                <MainLayout />
+              </Suspense>
+            )
           }>
             <Route index element={<DashboardScreen />} />
-            <Route path="messages" element={<MessagingScreen />} />
-            <Route path="calendar" element={<SchoolCalendarScreen />} />
-            <Route path="settings" element={<SettingsScreen />} />
+            <Route path="messages" element={
+              <Suspense fallback={<LazyLoadingSpinner message="Loading messages..." />}>
+                <MessagingScreen />
+              </Suspense>
+            } />
+            <Route path="calendar" element={
+              <Suspense fallback={<LazyLoadingSpinner message="Loading calendar..." />}>
+                <SchoolCalendarScreen />
+              </Suspense>
+            } />
+            <Route path="settings" element={
+              <Suspense fallback={<LazyLoadingSpinner message="Loading settings..." />}>
+                <SettingsScreen />
+              </Suspense>
+            } />
             {/* ...existing code for role-based routes... */}
             {currentUser?.role === UserRole.ADMIN && (
               <>
                 <Route path="admin/dashboard" element={<DashboardScreen />} />
-                <Route path="admin/students" element={<AdminStudentManagement />} />
-                <Route path="admin/students/:studentId" element={<AdminStudentProfileView />} />
-                <Route path="admin/teachers" element={<AdminTeacherManagement />} />
-                <Route path="admin/teachers/:teacherId" element={<AdminTeacherProfileView />} />
-                <Route path="admin/classes" element={<AdminClassManagement />} />
-                <Route path="admin/subjects" element={<AdminSubjectManagement />} />
-                <Route path="admin/master-gradesheet" element={<AdminMasterGradesheetScreen />} />
-                <Route path="admin/moe-reporting" element={<AdminMoEReportingScreen />} />
-                <Route path="admin/academic-planner" element={<LiberianAcademicPlannerScreen />} />
-                <Route path="admin/design-showcase" element={<LiberianCulturalShowcase />} />
-                <Route path="admin/parents" element={<AdminParentManagement />} />
-                <Route path="admin/point-rules" element={<AdminPointRulesManagement />} />
-                <Route path="admin/leaderboard" element={<AdminLeaderboardScreen />} />
-                <Route path="admin/reports" element={<AdminReportsScreen />} />
+                <Route path="admin/students" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading student management..." />}>
+                    <AdminStudentManagement />
+                  </Suspense>
+                } />
+                <Route path="admin/students/:studentId" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading student profile..." />}>
+                    <AdminStudentProfileView />
+                  </Suspense>
+                } />
+                <Route path="admin/teachers" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading teacher management..." />}>
+                    <AdminTeacherManagement />
+                  </Suspense>
+                } />
+                <Route path="admin/teachers/:teacherId" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading teacher profile..." />}>
+                    <AdminTeacherProfileView />
+                  </Suspense>
+                } />
+                <Route path="admin/classes" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading class management..." />}>
+                    <AdminClassManagement />
+                  </Suspense>
+                } />
+                <Route path="admin/subjects" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading subject management..." />}>
+                    <AdminSubjectManagement />
+                  </Suspense>
+                } />
+                <Route path="admin/master-gradesheet" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading master gradesheet..." />}>
+                    <AdminMasterGradesheetScreen />
+                  </Suspense>
+                } />
+                <Route path="admin/moe-reporting" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading MoE reporting..." />}>
+                    <AdminMoEReportingScreen />
+                  </Suspense>
+                } />
+                <Route path="admin/academic-planner" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading academic planner..." />}>
+                    <LiberianAcademicPlannerScreen />
+                  </Suspense>
+                } />
+                <Route path="admin/design-showcase" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading cultural showcase..." />}>
+                    <LiberianCulturalShowcase />
+                  </Suspense>
+                } />
+                <Route path="admin/parents" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading parent management..." />}>
+                    <AdminParentManagement />
+                  </Suspense>
+                } />
+                <Route path="admin/point-rules" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading point rules..." />}>
+                    <AdminPointRulesManagement />
+                  </Suspense>
+                } />
+                <Route path="admin/leaderboard" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading leaderboard..." />}>
+                    <AdminLeaderboardScreen />
+                  </Suspense>
+                } />
+                <Route path="admin/reports" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading reports..." />}>
+                    <AdminReportsScreen />
+                  </Suspense>
+                } />
               </>
             )}
             {currentUser?.role === UserRole.TEACHER && (
               <>
                 <Route path="teacher/dashboard" element={<DashboardScreen />} />
-                <Route path="teacher/my-classes" element={<TeacherMyClassesScreen />} />
-                <Route path="teacher/attendance" element={<TeacherAttendance />} />
-                <Route path="teacher/points" element={<TeacherPointSystem />} />
-                <Route path="teacher/grades" element={<TeacherGradebookScreen />} />
-                <Route path="teacher/comprehensive-gradebook" element={<ComprehensiveTeacherGradebook />} />
-                <Route path="teacher/master-gradesheet" element={<TeacherMasterGradesheetScreen />} />
-                <Route path="teacher/reports" element={<TeacherReportsScreen />} />
-                <Route path="teacher/resources" element={<TeacherClassResourcesScreen />} /> 
+                <Route path="teacher/my-classes" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading classes..." />}>
+                    <TeacherMyClassesScreen />
+                  </Suspense>
+                } />
+                <Route path="teacher/attendance" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading attendance..." />}>
+                    <TeacherAttendance />
+                  </Suspense>
+                } />
+                <Route path="teacher/points" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading point system..." />}>
+                    <TeacherPointSystem />
+                  </Suspense>
+                } />
+                <Route path="teacher/grades" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading gradebook..." />}>
+                    <TeacherGradebookScreen />
+                  </Suspense>
+                } />
+                <Route path="teacher/comprehensive-gradebook" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading comprehensive gradebook..." />}>
+                    <ComprehensiveTeacherGradebook />
+                  </Suspense>
+                } />
+                <Route path="teacher/master-gradesheet" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading master gradesheet..." />}>
+                    <TeacherMasterGradesheetScreen />
+                  </Suspense>
+                } />
+                <Route path="teacher/reports" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading reports..." />}>
+                    <TeacherReportsScreen />
+                  </Suspense>
+                } />
+                <Route path="teacher/resources" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading resources..." />}>
+                    <TeacherClassResourcesScreen />
+                  </Suspense>
+                } />
               </>
             )}
             {currentUser?.role === UserRole.STUDENT && (
               <>
                 <Route path="student/dashboard" element={<DashboardScreen />} />
-                <Route path="student/profile" element={<StudentProfilePage studentId={currentUser.studentId!} />} />
-                <Route path="student/schedule" element={<StudentScheduleScreen />} />
-                <Route path="student/assignments" element={<StudentAssignmentsScreen />} /> 
-                <Route path="student/resources" element={<StudentClassResourcesScreen />} /> 
-                <Route path="student/points" element={<StudentProfilePage studentId={currentUser.studentId!} section="points"/>} />
-                <Route path="student/grades" element={<StudentProfilePage studentId={currentUser.studentId!} section="grades"/>} />
-                <Route path="student/attendance" element={<StudentProfilePage studentId={currentUser.studentId!} section="attendance"/>} />
-                <Route path="student/leaderboard" element={<StudentLeaderboardScreen />} />
+                <Route path="student/profile" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading profile..." />}>
+                    <StudentProfilePage studentId={currentUser.studentId!} />
+                  </Suspense>
+                } />
+                <Route path="student/schedule" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading schedule..." />}>
+                    <StudentScheduleScreen />
+                  </Suspense>
+                } />
+                <Route path="student/assignments" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading assignments..." />}>
+                    <StudentAssignmentsScreen />
+                  </Suspense>
+                } />
+                <Route path="student/resources" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading resources..." />}>
+                    <StudentClassResourcesScreen />
+                  </Suspense>
+                } />
+                <Route path="student/points" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading points..." />}>
+                    <StudentProfilePage studentId={currentUser.studentId!} section="points"/>
+                  </Suspense>
+                } />
+                <Route path="student/grades" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading grades..." />}>
+                    <StudentProfilePage studentId={currentUser.studentId!} section="grades"/>
+                  </Suspense>
+                } />
+                <Route path="student/attendance" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading attendance..." />}>
+                    <StudentProfilePage studentId={currentUser.studentId!} section="attendance"/>
+                  </Suspense>
+                } />
+                <Route path="student/leaderboard" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading leaderboard..." />}>
+                    <StudentLeaderboardScreen />
+                  </Suspense>
+                } />
               </>
             )}
             {currentUser?.role === UserRole.PARENT && (
               <>
                 <Route path="parent/dashboard" element={<DashboardScreen />} />
-                <Route path="parent/child-profile" element={<StudentProfilePage studentId={currentUser.studentId!} />} />
+                <Route path="parent/child-profile" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading child profile..." />}>
+                    <StudentProfilePage studentId={currentUser.studentId!} />
+                  </Suspense>
+                } />
                 {/* <Route path="parent/child-resources" element={<StudentClassResourcesScreen studentIdForParent={currentUser.studentId!} />} /> */}
-                <Route path="parent/child-points" element={<StudentProfilePage studentId={currentUser.studentId!} section="points"/>} />
-                <Route path="parent/child-grades" element={<StudentProfilePage studentId={currentUser.studentId!} section="grades"/>} />
+                <Route path="parent/child-points" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading child points..." />}>
+                    <StudentProfilePage studentId={currentUser.studentId!} section="points"/>
+                  </Suspense>
+                } />
+                <Route path="parent/child-grades" element={
+                  <Suspense fallback={<LazyLoadingSpinner message="Loading child grades..." />}>
+                    <StudentProfilePage studentId={currentUser.studentId!} section="grades"/>
+                  </Suspense>
+                } />
               </>
             )}
             <Route path="*" element={<Navigate to="/" />} />
