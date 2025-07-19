@@ -17,6 +17,16 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-73YCMRF5KK"
 };
 
+// Debug logging for production
+if (typeof window !== 'undefined') {
+  console.log('🔥 Firebase Config Debug:', {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    hasApiKey: !!firebaseConfig.apiKey,
+    environment: import.meta.env.MODE || 'production'
+  });
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 

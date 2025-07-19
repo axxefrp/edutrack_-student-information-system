@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  AcademicCapIcon, 
-  UserGroupIcon, 
-  ChartBarIcon, 
+import {
+  AcademicCapIcon,
+  UserGroupIcon,
+  ChartBarIcon,
   CalendarIcon,
   ShieldCheckIcon,
   DevicePhoneMobileIcon
 } from '@heroicons/react/24/outline';
+import FirebaseConnectionTest from '../Shared/FirebaseConnectionTest';
 
 const LandingPage: React.FC = () => {
   const features = [
@@ -153,6 +154,21 @@ const LandingPage: React.FC = () => {
           >
             Get Started Today
           </Link>
+        </div>
+      </section>
+
+      {/* Firebase Connection Test - Temporary for debugging */}
+      <section className="py-16 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              System Status
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Firebase connectivity and data access status
+            </p>
+          </div>
+          <FirebaseConnectionTest />
         </div>
       </section>
 

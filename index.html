@@ -94,15 +94,20 @@
 <body class="bg-gray-100 dark:bg-gray-900">
   <!-- 🇱🇷 EduTrack Application Root -->
   <div id="root">
-    <!-- Loading screen with Liberian cultural context -->
-    <div class="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+    <!-- Unified Loading screen with Liberian cultural context -->
+    <div id="initial-loader" class="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
       <div class="text-center">
         <div class="text-6xl mb-4 animate-pulse">🇱🇷</div>
         <h1 class="text-2xl font-bold text-red-700 dark:text-red-400 mb-2">EduTrack</h1>
-        <p class="text-blue-700 dark:text-blue-400 font-medium">Liberian Student Information System</p>
-        <div class="mt-4 flex justify-center">
+        <p id="loading-message" class="text-blue-700 dark:text-blue-400 font-medium mb-4">Initializing Liberian Student Information System...</p>
+        <div class="flex justify-center mb-4">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
         </div>
+        <!-- Progress indicator -->
+        <div class="w-64 bg-gray-200 rounded-full h-2 mx-auto">
+          <div id="progress-bar" class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width: 10%"></div>
+        </div>
+        <p id="progress-text" class="text-sm text-gray-600 dark:text-gray-400 mt-2">Loading application...</p>
       </div>
     </div>
   </div>
@@ -117,6 +122,48 @@
         history.replaceState(null, null, redirect);
       }
     })();
+  </script>
+
+  <!-- Loading Progress Management -->
+  <script>
+    window.EduTrackLoader = {
+      updateProgress: function(percent, message) {
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const loadingMessage = document.getElementById('loading-message');
+
+        if (progressBar) progressBar.style.width = percent + '%';
+        if (progressText) progressText.textContent = message || 'Loading...';
+        if (loadingMessage && percent > 50) {
+          loadingMessage.textContent = 'Connecting to Firebase services...';
+        }
+      },
+
+      hide: function() {
+        const loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          loader.style.transition = 'opacity 0.5s ease-out';
+          setTimeout(() => {
+            if (loader.parentNode) {
+              loader.parentNode.removeChild(loader);
+            }
+          }, 500);
+        }
+      }
+    };
+
+    // Simulate initial loading progress
+    let progress = 10;
+    const progressInterval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress > 90) progress = 90;
+      window.EduTrackLoader.updateProgress(progress, 'Loading application components...');
+
+      if (progress >= 90) {
+        clearInterval(progressInterval);
+      }
+    }, 200);
   </script>
 
   <script type="module" src="/index.tsx"></script>

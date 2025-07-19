@@ -7,6 +7,16 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWith
 import { collection, doc, getDoc, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 import { User, UserRole, Student, Teacher, PointTransaction, AppContextType, RegistrationDetails, SchoolClass, Grade, Message, ToastNotification, SchoolEvent, Subject, DocumentResource, PointRule, PointRuleSuggestion } from './types';
+
+// Declare global EduTrackLoader interface
+declare global {
+  interface Window {
+    EduTrackLoader?: {
+      updateProgress: (percent: number, message?: string) => void;
+      hide: () => void;
+    };
+  }
+}
 import { evaluateRulesForStudents } from './utils/pointRuleEngine';
 import LoginScreen from './components/Auth/LoginScreen';
 import RegisterScreen from './components/Auth/RegisterScreen';
@@ -75,11 +85,13 @@ const App: React.FC = () => {
     const unsubscribeTransactions = onSnapshot(
       transactionsCollectionRef,
       (snapshot) => {
+        console.log('📊 Point transactions loaded:', snapshot.docs.length);
         const transactionsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as PointTransaction));
         setPointTransactions(transactionsData);
       },
       (error) => {
-        console.error("Error listening to point transactions:", error);
+        console.error("❌ Error listening to point transactions:", error);
+        console.error("Error code:", error.code, "Error message:", error.message);
         // Continue with empty array if there's an error
         setPointTransactions([]);
       }
@@ -97,6 +109,23 @@ const App: React.FC = () => {
     }, 10000); // 10 second timeout
 
     return () => clearTimeout(timeout);
+  }, [authLoading]);
+
+  // Update loading progress when React app starts
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.EduTrackLoader) {
+      window.EduTrackLoader.updateProgress(60, 'Initializing Firebase services...');
+    }
+  }, []);
+
+  // Hide initial loader when auth loading completes
+  useEffect(() => {
+    if (!authLoading && typeof window !== 'undefined' && window.EduTrackLoader) {
+      window.EduTrackLoader.updateProgress(100, 'Ready!');
+      setTimeout(() => {
+        window.EduTrackLoader?.hide();
+      }, 500);
+    }
   }, [authLoading]);
 
   useEffect(() => {
@@ -133,21 +162,32 @@ const App: React.FC = () => {
     const unsubscribeUsers = onSnapshot(
       usersCollectionRef,
       (snapshot) => {
+        console.log('👥 Users loaded:', snapshot.docs.length);
         const usersData = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
         setUsers(usersData);
       },
       (error) => {
-        console.error("Error listening to users:", error);
+        console.error("❌ Error listening to users:", error);
+        console.error("Error code:", error.code, "Error message:", error.message);
         setUsers([]);
       }
     );
 
     // Firestore students listener
     const studentsCollectionRef = collection(db, "students");
-    const unsubscribeStudents = onSnapshot(studentsCollectionRef, (snapshot) => {
-      const studentsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Student));
-      setStudents(studentsData);
-    });
+    const unsubscribeStudents = onSnapshot(
+      studentsCollectionRef,
+      (snapshot) => {
+        console.log('🎓 Students loaded:', snapshot.docs.length);
+        const studentsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Student));
+        setStudents(studentsData);
+      },
+      (error) => {
+        console.error("❌ Error listening to students:", error);
+        console.error("Error code:", error.code, "Error message:", error.message);
+        setStudents([]);
+      }
+    );
 
     // Firestore teachers listener
     const teachersCollectionRef = collection(db, "teachers");
@@ -910,24 +950,16 @@ const App: React.FC = () => {
     dismissPointSuggestion,
   };
   
+  // Show loading state using the unified loader (no separate React loading screen)
   if (authLoading) {
-      return (
-          <div className="min-h-screen flex items-center justify-center bg-gray-100">
-              <div className="text-center">
-                  <div className="text-6xl mb-4 animate-pulse">🇱🇷</div>
-                  <h1 className="text-2xl font-bold text-red-700 mb-2">EduTrack</h1>
-                  <p className="text-blue-700 font-medium mb-4">Loading Liberian Student Information System...</p>
-                  <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                  </div>
-                  {firebaseError && (
-                      <p className="text-yellow-600 mt-4 text-sm">
-                          {firebaseError}
-                      </p>
-                  )}
-              </div>
-          </div>
-      );
+      // Update the unified loader with Firebase connection status
+      if (typeof window !== 'undefined' && window.EduTrackLoader) {
+        const message = firebaseError
+          ? `Connection issue: ${firebaseError}`
+          : 'Connecting to Firebase services...';
+        window.EduTrackLoader.updateProgress(80, message);
+      }
+      return null; // Let the HTML loader handle the display
   }
 
   // Fallback: If user is missing required fields, show a message
