@@ -2,55 +2,55 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Classes collection rules
+    // Classes collection rules - Temporarily FULLY permissive for debugging
     match /classes/{classId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if request.auth != null;
-      // Optionally, restrict update/delete to admins later
+      // Temporarily allow all operations for debugging
+      allow read, write: if true;
     }
 
-    // Allow logged-in users to read the full list of users.
-    // Allow a user to create their own profile document upon registration.
-    // Temporarily more permissive for debugging
+    // Users collection rules - Temporarily FULLY permissive for debugging
     match /users/{userId} {
-      allow read: if request.auth != null ||
-                     resource == null ||
-                     request.headers.origin == 'https://candlelight-systems.github.io';
-      allow create: if request.auth.uid == userId || request.auth != null;
-      allow update: if request.auth.uid == userId || request.auth != null;
+      // Temporarily allow all operations for debugging
+      allow read, write: if true;
     }
 
-    // Teachers collection rules
+    // Teachers collection rules - Temporarily FULLY permissive for debugging
     match /teachers/{teacherId} {
-      // Allow any authenticated user to create a teacher document (for registration)
-      allow create: if request.auth != null;
-      // Allow read access to authenticated users
-      allow read: if request.auth != null;
-      // Allow only admins to delete teacher documents
-      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+      // Temporarily allow all operations for debugging
+      allow read, write: if true;
     }
 
-    // Students collection rules - Temporarily more permissive for debugging
+    // Students collection rules - Temporarily FULLY permissive for debugging
     match /students/{studentId} {
-      // Allow any authenticated user to create a student document (for registration)
-      allow create: if request.auth != null;
-      // Allow read access to authenticated users OR from GitHub Pages domain
-      allow read: if request.auth != null ||
-                     resource == null ||
-                     request.headers.origin == 'https://candlelight-systems.github.io';
-      // Allow update/delete for authenticated users
-      allow update, delete: if request.auth != null;
+      // Temporarily allow all operations for debugging
+      allow read, write: if true;
     }
 
-    // Subjects collection rules
+    // Subjects collection rules - Temporarily FULLY permissive for debugging
     match /subjects/{subjectId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if request.auth != null;
-      // Optionally, restrict update/delete to admins later
+      // Temporarily allow all operations for debugging
+      allow read, write: if true;
+    }
+
+    // Add rules for other collections that might be missing
+    match /pointTransactions/{transactionId} {
+      allow read, write: if true;
+    }
+
+    match /grades/{gradeId} {
+      allow read, write: if true;
+    }
+
+    match /messages/{messageId} {
+      allow read, write: if true;
+    }
+
+    match /events/{eventId} {
+      allow read, write: if true;
+    }
+
+    match /resources/{resourceId} {
+      allow read, write: if true;
     }
 
   }

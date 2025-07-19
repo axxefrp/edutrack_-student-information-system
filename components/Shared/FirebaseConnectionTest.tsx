@@ -33,12 +33,22 @@ const FirebaseConnectionTest: React.FC = () => {
       errors: []
     };
 
+    console.log('🔥 Starting Firebase connection test...');
+    console.log('🔥 Firebase Config:', {
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'edutrack-sis',
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'edutrack-sis.firebaseapp.com',
+      hasApiKey: !!(import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyC4pNswgfUT_jOQDtdJ3qoJ7oZmcMcU3a0'),
+      environment: import.meta.env.MODE || 'production'
+    });
+
     try {
       // Test Auth connection
+      console.log('🔐 Testing Firebase Auth...');
       const authTest = new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           newStatus.auth = 'connected';
-          console.log('🔐 Auth state:', user ? 'Authenticated' : 'Not authenticated');
+          console.log('🔐 Auth state:', user ? `Authenticated as ${user.email}` : 'Not authenticated');
+          console.log('🔐 Auth user details:', user ? { uid: user.uid, email: user.email } : 'No user');
           unsubscribe();
           resolve(user);
         });
@@ -51,21 +61,29 @@ const FirebaseConnectionTest: React.FC = () => {
     }
 
     // Test Firestore collections
+    console.log('📊 Testing Firestore collections...');
     const collections = ['users', 'students', 'teachers', 'classes'];
     for (const collectionName of collections) {
       try {
+        console.log(`📊 Testing ${collectionName} collection...`);
         const collectionRef = collection(db, collectionName);
         const snapshot = await getDocs(collectionRef);
         newStatus.collections[collectionName as keyof typeof newStatus.collections] = snapshot.docs.length;
-        console.log(`📊 ${collectionName}:`, snapshot.docs.length, 'documents');
-        
+        console.log(`✅ ${collectionName}:`, snapshot.docs.length, 'documents found');
+
+        // Log first document for debugging
+        if (snapshot.docs.length > 0) {
+          console.log(`📄 Sample ${collectionName} document:`, snapshot.docs[0].data());
+        }
+
         if (newStatus.firestore !== 'error') {
           newStatus.firestore = 'connected';
         }
       } catch (error: any) {
         newStatus.firestore = 'error';
-        newStatus.errors.push(`${collectionName} error: ${error.message}`);
+        newStatus.errors.push(`${collectionName} error: ${error.code} - ${error.message}`);
         console.error(`❌ ${collectionName} collection failed:`, error);
+        console.error(`❌ Error details:`, { code: error.code, message: error.message, stack: error.stack });
       }
     }
 
