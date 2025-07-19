@@ -51,6 +51,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
   // Remaining mock data states
   const [students, setStudents] = useState<Student[]>([]);
@@ -71,39 +72,75 @@ const App: React.FC = () => {
   // Firestore point transactions listener
   useEffect(() => {
     const transactionsCollectionRef = collection(db, "pointTransactions");
-    const unsubscribeTransactions = onSnapshot(transactionsCollectionRef, (snapshot) => {
-      const transactionsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as PointTransaction));
-      setPointTransactions(transactionsData);
-    });
+    const unsubscribeTransactions = onSnapshot(
+      transactionsCollectionRef,
+      (snapshot) => {
+        const transactionsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as PointTransaction));
+        setPointTransactions(transactionsData);
+      },
+      (error) => {
+        console.error("Error listening to point transactions:", error);
+        // Continue with empty array if there's an error
+        setPointTransactions([]);
+      }
+    );
     return () => unsubscribeTransactions();
   }, []);
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (authLoading) {
+        console.warn("Firebase initialization timeout - continuing with offline mode");
+        setAuthLoading(false);
+        setFirebaseError("Connection timeout - running in offline mode");
+      }
+    }, 10000); // 10 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [authLoading]);
+
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userDocRef = doc(db, "users", firebaseUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userProfile = userDocSnap.data() as Omit<User, 'uid' | 'email'>;
-          setCurrentUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            ...userProfile
-          });
+      try {
+        if (firebaseUser) {
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            const userProfile = userDocSnap.data() as Omit<User, 'uid' | 'email'>;
+            setCurrentUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              ...userProfile
+            });
+          } else {
+            console.error("User document not found in Firestore for UID:", firebaseUser.uid);
+            setCurrentUser(null);
+          }
         } else {
-          console.error("User document not found in Firestore for UID:", firebaseUser.uid);
           setCurrentUser(null);
         }
-      } else {
+        setFirebaseError(null); // Clear any previous errors
+      } catch (error) {
+        console.error("Error in auth state change:", error);
         setCurrentUser(null);
+        setFirebaseError("Firebase connection error");
+      } finally {
+        setAuthLoading(false);
       }
-      setAuthLoading(false);
     });
 
     const usersCollectionRef = collection(db, "users");
-    const unsubscribeUsers = onSnapshot(usersCollectionRef, (snapshot) => {
-      const usersData = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
-      setUsers(usersData);
-    });
+    const unsubscribeUsers = onSnapshot(
+      usersCollectionRef,
+      (snapshot) => {
+        const usersData = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
+        setUsers(usersData);
+      },
+      (error) => {
+        console.error("Error listening to users:", error);
+        setUsers([]);
+      }
+    );
 
     // Firestore students listener
     const studentsCollectionRef = collection(db, "students");
@@ -876,7 +913,19 @@ const App: React.FC = () => {
   if (authLoading) {
       return (
           <div className="min-h-screen flex items-center justify-center bg-gray-100">
-              <p>Loading application...</p>
+              <div className="text-center">
+                  <div className="text-6xl mb-4 animate-pulse">🇱🇷</div>
+                  <h1 className="text-2xl font-bold text-red-700 mb-2">EduTrack</h1>
+                  <p className="text-blue-700 font-medium mb-4">Loading Liberian Student Information System...</p>
+                  <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                  </div>
+                  {firebaseError && (
+                      <p className="text-yellow-600 mt-4 text-sm">
+                          {firebaseError}
+                      </p>
+                  )}
+              </div>
           </div>
       );
   }
