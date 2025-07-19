@@ -9,6 +9,7 @@ import { SimpleThemeToggle } from '../Shared/SimpleThemeToggle';
 interface HeaderProps {
   username: string;
   onLogout: () => void;
+  onMenuClick?: () => void;
 }
 
 const getPageTitle = (pathname: string, userRole: UserRole | undefined): string => {
@@ -60,7 +61,7 @@ const getPageTitle = (pathname: string, userRole: UserRole | undefined): string 
 };
 
 
-const Header: React.FC<HeaderProps> = ({ username, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ username, onLogout, onMenuClick }) => {
   const context = useContext(AppContext);
   const location = useLocation();
 
@@ -72,13 +73,24 @@ const Header: React.FC<HeaderProps> = ({ username, onLogout }) => {
   const pageTitle = getPageTitle(location.pathname, context?.currentUser?.role);
 
   return (
-    <header className="h-16 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700">
-      <div>
+    <header className="h-16 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between px-4 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-3"
+          aria-label="Open sidebar"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</h2>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-4">
         <SimpleThemeToggle />
-        <div className="text-right">
+        <div className="text-right hidden sm:block">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{username}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
                 Online
@@ -89,15 +101,23 @@ const Header: React.FC<HeaderProps> = ({ username, onLogout }) => {
                 }
             </p>
         </div>
+
+        {/* Mobile User Info */}
+        <div className="sm:hidden">
+          {unreadMessages > 0 && (
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+          )}
+        </div>
+
         <button
           onClick={onLogout}
           className="flex items-center text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150"
           title="Logout"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-1">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 sm:mr-1">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
           </svg>
-          Logout
+          <span className="hidden sm:inline">Logout</span>
         </button>
       </div>
     </header>

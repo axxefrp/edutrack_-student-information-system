@@ -331,7 +331,8 @@ const AdminStudentManagement: React.FC = () => {
       </div>
 
 
-      <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-white shadow-xl rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -388,6 +389,59 @@ const AdminStudentManagement: React.FC = () => {
             </tbody>
             </table>
         </div>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {filteredAndSortedStudents.map((student: Student) => (
+          <div key={student.id} className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
+            <div className="flex justify-between items-start mb-3">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{student.name}</h3>
+                <div className="flex items-center space-x-4 mt-1">
+                  <span className="text-sm text-gray-600">Grade {student.grade}</span>
+                  <span className="text-sm text-gray-600">{student.points} points</span>
+                </div>
+              </div>
+              <div className="flex flex-col space-y-1">
+                <Button
+                  onClick={() => navigate(`/admin/students/${student.id}`)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs px-2 py-1"
+                >
+                  View
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => openEditModal(student)}
+                  variant="secondary"
+                  size="sm"
+                  className="text-xs px-3 py-1"
+                >
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => handleDeleteStudent(student)}
+                  variant="danger"
+                  size="sm"
+                  loading={deletingStudentId === student.id}
+                  className="text-xs px-3 py-1"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filteredAndSortedStudents.length === 0 && (
+          <div className="bg-white shadow-md rounded-lg p-8 text-center text-gray-500">
+            {filterGrade ? `No students found for Grade ${filterGrade}.` : "No students found. Add a new student to get started."}
+          </div>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModalAndResetForm} title={editingStudent ? "Edit Student" : "Add New Student"}>

@@ -1,5 +1,5 @@
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { APP_NAME, NAVIGATION_LINKS } from '../../constants';
@@ -8,6 +8,8 @@ import DarkModeToggle from '../Shared/DarkModeToggle';
 
 interface SidebarProps {
   userRole: UserRole;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 // Minimalistic SVG Icons for demo purposes
@@ -34,24 +36,53 @@ const IconMap: Record<string, React.ReactNode> = {
 };
 
 
-const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
+const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onClose }) => {
   const links = NAVIGATION_LINKS[userRole] || [];
   const context = useContext(AppContext);
-  
+
   let unreadCount = 0;
   if (context && context.currentUser && context.getUnreadMessagesCount) {
     unreadCount = context.getUnreadMessagesCount();
   }
 
   return (
-    <div className="w-64 bg-gradient-to-b from-red-800 via-blue-800 to-red-800 text-white flex flex-col h-full border-r-4 border-red-600 shadow-xl">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
+        w-64 bg-gradient-to-b from-red-800 via-blue-800 to-red-800 text-white
+        flex flex-col h-full border-r-4 border-red-600 shadow-xl
+        transform transition-transform duration-300 ease-in-out lg:transform-none
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
       {/* Liberian Cultural Header */}
-      <div className="h-20 flex items-center justify-center border-b-2 border-red-400 flex-shrink-0 bg-gradient-to-r from-red-600 via-white to-blue-600 text-red-700">
-        <span className="text-2xl mr-2">🇱🇷</span>
-        <div className="text-center">
-          <h1 className="text-lg font-bold text-red-700">{APP_NAME}</h1>
-          <p className="text-xs text-blue-700 font-medium">Liberian Excellence</p>
+      <div className="h-20 flex items-center justify-between border-b-2 border-red-400 flex-shrink-0 bg-gradient-to-r from-red-600 via-white to-blue-600 text-red-700 px-4">
+        <div className="flex items-center">
+          <span className="text-2xl mr-2">🇱🇷</span>
+          <div className="text-center">
+            <h1 className="text-lg font-bold text-red-700">{APP_NAME}</h1>
+            <p className="text-xs text-blue-700 font-medium">Liberian Excellence</p>
+          </div>
         </div>
+
+        {/* Mobile Close Button */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-2 rounded-md text-red-700 hover:bg-red-100 transition-colors"
+          aria-label="Close sidebar"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Scrollable Navigation */}
@@ -90,7 +121,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
           &copy; {new Date().getFullYear()} 🇱🇷 EduTrack
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
