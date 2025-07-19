@@ -1,7 +1,7 @@
 import React, { useContext, useState, useMemo } from 'react';
 import { AppContext } from '../../App';
 import { SchoolEvent, UserRole } from '../../types';
-import { 
+import {
   LIBERIAN_ACADEMIC_TERMS,
   getCurrentAcademicTerm,
   LiberianAcademicTerm,
@@ -9,6 +9,14 @@ import {
   LIBERIAN_NATIONAL_HOLIDAYS,
   LIBERIAN_CULTURAL_EVENTS
 } from '../../utils/liberianCalendarSystem';
+import {
+  LiberianHeader,
+  LiberianCard,
+  LiberianButton,
+  LiberianMetricCard,
+  LiberianLoading,
+  LiberianAlert
+} from '../Shared/LiberianDesignSystem';
 import Button from '../Shared/Button';
 import Modal from '../Shared/Modal';
 import Input from '../Shared/Input';
@@ -27,7 +35,7 @@ const LiberianAcademicPlannerScreen: React.FC = () => {
   const [newEventType, setNewEventType] = useState<'academic' | 'cultural' | 'administrative'>('academic');
 
   if (!context || !context.currentUser) {
-    return <div className="p-6 text-gray-700">Loading Academic Planner...</div>;
+    return <LiberianLoading text="Loading Liberian Academic Planner..." />;
   }
 
   const { schoolEvents, currentUser, addSchoolEvent, addNotificationDirectly } = context;
@@ -118,45 +126,38 @@ const LiberianAcademicPlannerScreen: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-white to-blue-600 text-gray-800 p-6 rounded-lg mb-6 border-2 border-red-600">
-        <div className="flex justify-between items-center">
+      {/* Liberian Cultural Header */}
+      <LiberianHeader
+        title="🇱🇷 Liberian Academic Calendar Planner"
+        subtitle="Comprehensive academic year planning with cultural integration"
+      >
+        <div className="flex items-center space-x-4">
           <div>
-            <h1 className="text-3xl font-bold text-red-700">🇱🇷 Liberian Academic Calendar Planner</h1>
-            <p className="text-blue-700 mt-1 font-medium">Comprehensive academic year planning with cultural integration</p>
+            <label className="block text-sm font-medium text-blue-700 mb-1">Academic Year</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="px-3 py-2 border border-red-300 rounded-md focus:ring-2 focus:ring-red-500 bg-white"
+            >
+              {[selectedYear - 1, selectedYear, selectedYear + 1].map(year => (
+                <option key={year} value={year}>{year}/{year + 1}</option>
+              ))}
+            </select>
           </div>
-          <div className="flex items-center space-x-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2 border border-red-300 rounded-md focus:ring-2 focus:ring-red-500"
-              >
-                {[selectedYear - 1, selectedYear, selectedYear + 1].map(year => (
-                  <option key={year} value={year}>{year}/{year + 1}</option>
-                ))}
-              </select>
-            </div>
-            {currentUser.role === UserRole.ADMIN && (
-              <Button onClick={() => setIsEventModalOpen(true)} variant="primary">
-                Add Academic Event
-              </Button>
-            )}
-          </div>
+          {currentUser.role === UserRole.ADMIN && (
+            <LiberianButton onClick={() => setIsEventModalOpen(true)} variant="primary">
+              Add Academic Event
+            </LiberianButton>
+          )}
         </div>
-      </div>
+      </LiberianHeader>
 
       {/* Term Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {termStatistics.map(stat => (
-          <div 
+          <LiberianCard
             key={stat.term.termNumber}
-            className={`bg-white p-6 rounded-xl shadow-lg border-l-4 cursor-pointer transition-all hover:shadow-xl ${
-              selectedTerm.termNumber === stat.term.termNumber 
-                ? 'border-red-600 bg-red-50' 
-                : 'border-gray-300'
-            }`}
+            type={selectedTerm.termNumber === stat.term.termNumber ? 'national-holiday' : 'default'}
             onClick={() => setSelectedTerm(stat.term)}
           >
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
@@ -191,7 +192,7 @@ const LiberianAcademicPlannerScreen: React.FC = () => {
                 ))}
               </ul>
             </div>
-          </div>
+          </LiberianCard>
         ))}
       </div>
 

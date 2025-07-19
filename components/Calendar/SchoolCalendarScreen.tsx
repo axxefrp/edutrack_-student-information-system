@@ -9,6 +9,14 @@ import {
   LIBERIAN_ACADEMIC_TERMS,
   LiberianAcademicTerm
 } from '../../utils/liberianCalendarSystem';
+import {
+  LiberianHeader,
+  LiberianCard,
+  LiberianButton,
+  LiberianTabs,
+  LiberianEmptyState,
+  LiberianLoading
+} from '../Shared/LiberianDesignSystem';
 import Button from '../Shared/Button';
 import Modal from '../Shared/Modal';
 import Input from '../Shared/Input';
@@ -35,7 +43,7 @@ const SchoolCalendarScreen: React.FC = () => {
 
 
   if (!context || !context.currentUser) {
-    return <div className="p-6 text-gray-700">Loading calendar data...</div>;
+    return <LiberianLoading text="Loading Liberian academic calendar..." />;
   }
 
   const { schoolEvents, currentUser, addSchoolEvent, addNotificationDirectly } = context;
@@ -192,46 +200,30 @@ const SchoolCalendarScreen: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      {/* Enhanced Header with Liberian Context */}
-      <div className="bg-gradient-to-r from-red-600 via-white to-blue-600 text-gray-800 p-6 rounded-lg mb-6 border-2 border-red-600">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-red-700">🇱🇷 Liberian School Calendar</h1>
-            <p className="text-blue-700 mt-1 font-medium">
-              Current Term: {currentTerm.name} ({currentTerm.startMonth <= 7 ? 'May-July' : currentTerm.startMonth <= 4 ? 'January-April' : 'September-December'})
-            </p>
-          </div>
-          {currentUser.role === UserRole.ADMIN && (
-            <Button onClick={openAddEventModal} variant="primary">
-              Add School Event
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* Liberian Cultural Header */}
+      <LiberianHeader
+        title="🇱🇷 Liberian School Calendar"
+        subtitle={`Current Term: ${currentTerm.name} (${currentTerm.startMonth <= 7 ? 'May-July' : currentTerm.startMonth <= 4 ? 'January-April' : 'September-December'})`}
+      >
+        {currentUser.role === UserRole.ADMIN && (
+          <LiberianButton onClick={openAddEventModal} variant="primary">
+            Add School Event
+          </LiberianButton>
+        )}
+      </LiberianHeader>
 
       {/* Navigation and Filters */}
+      <LiberianTabs
+        tabs={[
+          { key: 'calendar', label: 'All Events', icon: '📅' },
+          { key: 'cultural', label: 'Cultural Events', icon: '🎭' },
+          { key: 'academic', label: 'Academic Calendar', icon: '🎓' }
+        ]}
+        activeTab={viewMode}
+        onTabChange={(tab) => setViewMode(tab as any)}
+      />
+
       <div className="bg-white rounded-lg shadow mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6">
-            {[
-              { key: 'calendar', label: '📅 All Events', icon: '📅' },
-              { key: 'cultural', label: '🎭 Cultural Events', icon: '🎭' },
-              { key: 'academic', label: '🎓 Academic Calendar', icon: '🎓' }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setViewMode(tab.key as any)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  viewMode === tab.key
-                    ? 'border-red-500 text-red-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
 
         {/* Term Filter */}
         <div className="px-6 py-4 bg-gray-50 flex justify-between items-center">
@@ -265,13 +257,11 @@ const SchoolCalendarScreen: React.FC = () => {
 
       {/* Events Display */}
       {relevantEvents.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-red-400 mx-auto mb-4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5M12 17.25h.008v.008H12v-.008Z" />
-          </svg>
-          <p className="text-xl text-gray-600">No events found for the selected term.</p>
-          <p className="text-sm text-gray-400 mt-2">Try selecting a different term or check back later for updates.</p>
-        </div>
+        <LiberianEmptyState
+          title="No Events Found"
+          description="No events found for the selected term. Try selecting a different term or check back later for updates."
+          icon="📅"
+        />
       )}
 
       {upcomingMonths.map(monthYear => (
@@ -287,13 +277,13 @@ const SchoolCalendarScreen: React.FC = () => {
               const isNationalHoliday = event.title.includes('🇱🇷');
 
               return (
-                <div
+                <LiberianCard
                   key={event.id}
-                  className={`bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 ${
-                    isNationalHoliday ? 'border-red-600' :
-                    isCulturalEvent ? 'border-blue-600' :
-                    'border-gray-400'
-                  }`}
+                  type={
+                    isNationalHoliday ? 'national-holiday' :
+                    isCulturalEvent ? 'cultural-event' :
+                    'academic-event'
+                  }
                 >
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-3">
                     <h3 className={`text-xl font-semibold ${
@@ -348,7 +338,7 @@ const SchoolCalendarScreen: React.FC = () => {
                       Relevant for: {event.audience.map(r => r.charAt(0) + r.slice(1).toLowerCase()).join(', ')}
                     </p>
                   )}
-                </div>
+                </LiberianCard>
               );
             })}
           </div>

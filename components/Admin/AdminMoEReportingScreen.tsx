@@ -1,12 +1,23 @@
 import React, { useContext, useState, useMemo } from 'react';
 import { AppContext } from '../../App';
 import { SchoolClass, Student, Grade, Subject, Teacher, LiberianGradeScale } from '../../types';
-import { 
-  LIBERIAN_GRADE_SCALE, 
+import {
+  LIBERIAN_GRADE_SCALE,
   checkUniversityEligibility,
   LIBERIAN_CORE_SUBJECTS,
-  WAEC_SUBJECTS 
+  WAEC_SUBJECTS
 } from '../../utils/liberianGradingSystem';
+import {
+  LiberianHeader,
+  LiberianCard,
+  LiberianButton,
+  LiberianTabs,
+  LiberianMetricCard,
+  WAECGradeBadge,
+  MoEIndicator,
+  LiberianStatus,
+  LiberianProgressBar
+} from '../Shared/LiberianDesignSystem';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import Button from '../Shared/Button';
 
@@ -335,15 +346,15 @@ const AdminMoEReportingScreen: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-white to-blue-600 text-gray-800 p-6 rounded-lg mb-6 border-2 border-red-600">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-red-700">🇱🇷 Ministry of Education Reporting System</h1>
-            <p className="text-blue-700 mt-1 font-medium">Comprehensive school performance and compliance reporting</p>
-          </div>
+      {/* Liberian Cultural Header */}
+      <LiberianHeader
+        title="🇱🇷 Ministry of Education Reporting System"
+        subtitle="Comprehensive school performance and compliance reporting"
+      >
+        <div className="flex items-center space-x-4">
+          <MoEIndicator text="MoE Compliant" status="compliant" />
           <div className="text-right">
-            <p className="text-sm text-gray-700 font-medium">Academic Term</p>
+            <p className="text-sm text-blue-700 font-medium">Academic Term</p>
             <select
               value={selectedTerm}
               onChange={(e) => setSelectedTerm(e.target.value as 1 | 2 | 3 | 'All')}
@@ -356,34 +367,23 @@ const AdminMoEReportingScreen: React.FC = () => {
             </select>
           </div>
         </div>
-      </div>
+      </LiberianHeader>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6">
-            {[
-              { key: 'overview', label: '📊 Overview', icon: '📊' },
-              { key: 'enrollment', label: '👥 Enrollment', icon: '👥' },
-              { key: 'performance', label: '📈 Performance', icon: '📈' },
-              { key: 'teachers', label: '👨‍🏫 Teachers', icon: '👨‍🏫' },
-              { key: 'infrastructure', label: '🏫 Infrastructure', icon: '🏫' },
-              { key: 'compliance', label: '✅ MoE Compliance', icon: '✅' }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setReportView(tab.key as any)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  reportView === tab.key
-                    ? 'border-red-500 text-red-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
+      {/* Navigation Tabs - Enhanced with Liberian Design System */}
+      <LiberianTabs
+        tabs={[
+          { key: 'overview', label: 'Overview', icon: '📊' },
+          { key: 'enrollment', label: 'Enrollment', icon: '👥' },
+          { key: 'performance', label: 'Performance', icon: '📈' },
+          { key: 'teachers', label: 'Teachers', icon: '👨‍🏫' },
+          { key: 'infrastructure', label: 'Infrastructure', icon: '🏫' },
+          { key: 'compliance', label: 'MoE Compliance', icon: '✅' }
+        ]}
+        activeTab={reportView}
+        onTabChange={(tab) => setReportView(tab as any)}
+      />
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
         
         {/* Export Controls */}
         <div className="px-6 py-4 bg-gray-50 flex justify-between items-center">
@@ -409,34 +409,48 @@ const AdminMoEReportingScreen: React.FC = () => {
         <div className="space-y-6">
           <h3 className="text-lg font-semibold text-gray-800">🇱🇷 School Performance Overview</h3>
 
-          {/* Key Metrics Cards */}
+          {/* Key Metrics Cards - Enhanced with Liberian Design System */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-600">
-              <p className="text-sm font-medium text-gray-500 uppercase">Total Students</p>
-              <p className="text-3xl font-bold text-red-600">{enrollmentStats.totalStudents}</p>
-              <p className="text-xs text-gray-500 mt-1">Across all grades</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600">
-              <p className="text-sm font-medium text-gray-500 uppercase">University Ready</p>
-              <p className="text-3xl font-bold text-blue-600">{performanceStats.universityReadyStudents}</p>
-              <p className="text-xs text-gray-500 mt-1">{((performanceStats.universityReadyStudents / enrollmentStats.totalStudents) * 100).toFixed(1)}% of students</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-600">
-              <p className="text-sm font-medium text-gray-500 uppercase">Credit Pass Rate</p>
-              <p className="text-3xl font-bold text-green-600">{performanceStats.creditPassRate.toFixed(1)}%</p>
-              <p className="text-xs text-gray-500 mt-1">WAEC standard</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-600">
-              <p className="text-sm font-medium text-gray-500 uppercase">MoE Compliance</p>
-              <p className="text-3xl font-bold text-yellow-600">{complianceStats.moEStandardsAdherence.toFixed(1)}%</p>
-              <p className="text-xs text-gray-500 mt-1">Overall adherence</p>
-            </div>
+            <LiberianMetricCard
+              title="Total Students"
+              value={enrollmentStats.totalStudents}
+              color="red"
+              icon="👥"
+              subtitle="Across all grades"
+            />
+            <LiberianMetricCard
+              title="University Ready"
+              value={performanceStats.universityReadyStudents}
+              color="blue"
+              icon="🎓"
+              subtitle={`${((performanceStats.universityReadyStudents / enrollmentStats.totalStudents) * 100).toFixed(1)}% of students`}
+              trend="up"
+            />
+            <LiberianMetricCard
+              title="Credit Pass Rate"
+              value={`${performanceStats.creditPassRate.toFixed(1)}%`}
+              color="green"
+              icon="📊"
+              subtitle="WAEC standard"
+              trend="up"
+            />
+            <LiberianMetricCard
+              title="MoE Compliance"
+              value={`${complianceStats.moEStandardsAdherence.toFixed(1)}%`}
+              color="yellow"
+              icon="🏛️"
+              subtitle="Overall adherence"
+              trend="stable"
+            />
           </div>
 
           {/* Quick Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">Grade Distribution (Liberian Scale)</h4>
+            <LiberianCard>
+              <h4 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-4 flex items-center">
+                <span className="mr-2">📊</span>
+                Grade Distribution (Liberian Scale)
+              </h4>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={Object.entries(performanceStats.gradeDistribution).map(([grade, count]) => ({ grade, count }))}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -446,10 +460,13 @@ const AdminMoEReportingScreen: React.FC = () => {
                   <Bar dataKey="count" fill="#BF0A30" />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </LiberianCard>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">Term Performance Progression</h4>
+            <LiberianCard>
+              <h4 className="text-lg font-semibold text-blue-700 dark:text-blue-400 mb-4 flex items-center">
+                <span className="mr-2">📈</span>
+                Term Performance Progression
+              </h4>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={performanceStats.termProgressionData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -461,7 +478,7 @@ const AdminMoEReportingScreen: React.FC = () => {
                   <Line type="monotone" dataKey="creditRate" stroke="#BF0A30" strokeWidth={2} name="Credit Pass Rate" />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </LiberianCard>
           </div>
         </div>
       )}

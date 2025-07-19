@@ -29,10 +29,14 @@ serviceAccountKey.json
 *.pem
 .env
 .env.local
-.env.production
 .env.development
+.env.test.local
+.env.production.local
 config/secrets.json
 firebase-adminsdk-*.json
+
+# Allow .env.production for GitHub Pages deployment
+!.env.production
 
 # Firebase
 .firebase/

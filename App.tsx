@@ -35,6 +35,7 @@ import TeacherReportsScreen from './components/Reporting/TeacherReportsScreen';
 import AdminMasterGradesheetScreen from './components/Admin/AdminMasterGradesheetScreen';
 import AdminMoEReportingScreen from './components/Admin/AdminMoEReportingScreen';
 import LiberianAcademicPlannerScreen from './components/Calendar/LiberianAcademicPlannerScreen';
+import LiberianCulturalShowcase from './components/Calendar/LiberianCulturalShowcase';
 import ComprehensiveTeacherGradebook from './components/Teacher/ComprehensiveTeacherGradebook';
 import TeacherMasterGradesheetScreen from './components/Teacher/TeacherMasterGradesheetScreen';
 import StudentScheduleScreen from './components/Student/StudentScheduleScreen';
@@ -924,6 +925,7 @@ const App: React.FC = () => {
                 <Route path="admin/master-gradesheet" element={<AdminMasterGradesheetScreen />} />
                 <Route path="admin/moe-reporting" element={<AdminMoEReportingScreen />} />
                 <Route path="admin/academic-planner" element={<LiberianAcademicPlannerScreen />} />
+                <Route path="admin/design-showcase" element={<LiberianCulturalShowcase />} />
                 <Route path="admin/parents" element={<AdminParentManagement />} />
                 <Route path="admin/point-rules" element={<AdminPointRulesManagement />} />
                 <Route path="admin/leaderboard" element={<AdminLeaderboardScreen />} />

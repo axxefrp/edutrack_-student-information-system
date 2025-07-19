@@ -1,18 +1,31 @@
 {
-  "name": "edutrack-student-information-system",
+  "name": "edutrack-liberian-sis",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Culturally authentic Student Information System for Liberian educational institutions",
+  "keywords": [
+    "liberian",
+    "education",
+    "student-information-system",
+    "waec",
+    "ministry-of-education"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:prod": "vite build --config vite.config.production.ts",
+    "build:prod": "NODE_ENV=production vite build",
+    "build:github": "VITE_GITHUB_PAGES=true vite build",
     "preview": "vite preview",
+    "preview:prod": "vite preview --port 4173",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "deploy": "npm run build:prod && gh-pages -d dist"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "deploy:local": "npm run build:github && gh-pages -d dist",
+    "deploy:verify": "npm run build:github && npm run preview:prod"
   },
   "dependencies": {
     "@google-cloud/firestore": "^7.11.2",
@@ -36,6 +49,7 @@
     "@vitest/ui": "^3.2.4",
     "happy-dom": "^18.0.1",
     "jsdom": "^26.1.0",
+    "terser": "^5.43.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",

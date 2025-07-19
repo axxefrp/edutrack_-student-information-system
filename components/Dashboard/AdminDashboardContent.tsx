@@ -4,23 +4,33 @@ import { AppContext } from '../../App';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line, Label } from 'recharts';
 import { Student } from '../../types';
+import {
+  LiberianHeader,
+  LiberianCard,
+  LiberianMetricCard,
+  LiberianButton,
+  MoEIndicator
+} from '../Shared/LiberianDesignSystem';
 
-const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; linkTo?: string; linkText?: string; color: string }> = ({ title, value, icon, linkTo, linkText, color }) => (
-  <div className={`bg-white p-6 rounded-xl shadow-lg border-l-4 ${color}`}>
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-500 uppercase">{title}</p>
-        <p className="text-3xl font-bold text-gray-800">{value}</p>
-      </div>
-      <div className="text-primary-500">{icon}</div>
-    </div>
-    {linkTo && linkText && (
-       <Link to={linkTo} className="mt-4 inline-block text-sm text-primary-600 hover:text-primary-800 font-medium">
-         {linkText} &rarr;
-       </Link>
-    )}
-  </div>
-);
+const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; linkTo?: string; linkText?: string; color: string }> = ({ title, value, icon, linkTo, linkText, color }) => {
+  const colorMap: Record<string, 'red' | 'blue' | 'green' | 'yellow' | 'purple'> = {
+    'border-blue-500': 'blue',
+    'border-green-500': 'green',
+    'border-purple-500': 'purple',
+    'border-yellow-500': 'yellow',
+    'border-red-500': 'red'
+  };
+
+  return (
+    <LiberianMetricCard
+      title={title}
+      value={value}
+      color={colorMap[color] || 'blue'}
+      icon={typeof icon === 'string' ? icon : '📊'}
+      subtitle={linkTo && linkText ? `View ${linkText}` : undefined}
+    />
+  );
+};
 
 // Mock data for Student Performance Trend
 const mockPerformanceData = [
@@ -82,6 +92,14 @@ const AdminDashboardContent: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Liberian Cultural Header */}
+      <LiberianHeader
+        title="🇱🇷 Administrator Dashboard"
+        subtitle="Welcome back! Here's an overview of your school's performance and Ministry of Education compliance."
+      >
+        <MoEIndicator text="MoE Compliant" status="compliant" />
+      </LiberianHeader>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard 
           title="Total Students" 
@@ -194,32 +212,38 @@ const AdminDashboardContent: React.FC = () => {
       </div>
 
 
-      <div className="bg-white p-6 rounded-xl shadow-lg mt-8">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Quick Actions</h2>
+      <LiberianCard>
+        <h2 className="text-xl font-semibold text-red-700 mb-4 flex items-center">
+          <span className="mr-2">⚡</span>
+          Quick Actions
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <Link to="/admin/students" className="block p-4 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition text-center font-medium">
-            Manage Students
+          <Link to="/admin/students" className="liberian-button liberian-button-primary text-center">
+            👥 Manage Students
           </Link>
-          <Link to="/admin/teachers" className="block p-4 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition text-center font-medium">
-            Manage Teachers
+          <Link to="/admin/teachers" className="liberian-button liberian-button-primary text-center">
+            👨‍🏫 Manage Teachers
           </Link>
-          <Link to="/admin/classes" className="block p-4 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition text-center font-medium">
-            Manage Classes
+          <Link to="/admin/classes" className="liberian-button liberian-button-primary text-center">
+            🏫 Manage Classes
           </Link>
-          <Link to="/admin/master-gradesheet" className="block p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center font-medium">
+          <Link to="/admin/master-gradesheet" className="liberian-button liberian-button-primary text-center bg-green-600 hover:bg-green-700">
             🇱🇷 Master Gradesheet
           </Link>
-          <Link to="/admin/moe-reporting" className="block p-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-center font-medium">
+          <Link to="/admin/moe-reporting" className="liberian-button liberian-button-primary text-center bg-red-600 hover:bg-red-700">
             📊 MoE Reporting
           </Link>
-          <Link to="/admin/academic-planner" className="block p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center font-medium">
+          <Link to="/admin/academic-planner" className="liberian-button liberian-button-primary text-center bg-blue-600 hover:bg-blue-700">
             🇱🇷 Academic Planner
           </Link>
-          <Link to="/admin/leaderboard" className="block p-4 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 transition text-center font-medium">
-            View Leaderboard
+          <Link to="/admin/design-showcase" className="liberian-button liberian-button-primary text-center bg-purple-600 hover:bg-purple-700">
+            🎨 Design System
+          </Link>
+          <Link to="/admin/leaderboard" className="liberian-button liberian-button-secondary text-center">
+            🏆 View Leaderboard
           </Link>
         </div>
-      </div>
+      </LiberianCard>
 
     </div>
   );

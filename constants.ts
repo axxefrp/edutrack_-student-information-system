@@ -12,6 +12,7 @@ export const NAVIGATION_LINKS = {
     { path: '/admin/master-gradesheet', label: '🇱🇷 Master Gradesheet', icon: 'ClipboardDocumentListIcon' },
     { path: '/admin/moe-reporting', label: '📊 MoE Reporting', icon: 'ChartBarIcon' },
     { path: '/admin/academic-planner', label: '🇱🇷 Academic Planner', icon: 'CalendarDaysIcon' },
+    { path: '/admin/design-showcase', label: '🎨 Design System', icon: 'SwatchIcon' },
     { path: '/admin/parents', label: 'Manage Parents', icon: 'ShieldCheckIcon' },
     { path: '/admin/point-rules', label: 'Point Rules', icon: 'SparklesIcon' },
     { path: '/admin/leaderboard', label: 'Leaderboard', icon: 'TrophyIcon' },

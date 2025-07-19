@@ -1,0 +1,539 @@
+/* 🇱🇷 Liberian Cultural Design System for EduTrack */
+/* Authentic Liberian educational interface with national pride and cultural heritage */
+/* Enhanced with Dark Mode Support while maintaining cultural authenticity */
+
+/* ===== LIBERIAN COLOR PALETTE WITH DARK MODE SUPPORT ===== */
+:root {
+  /* Primary Colors - Official Liberian Flag Colors (Light Mode) */
+  --liberian-red: #BF0A30;
+  --liberian-blue: #002868;
+  --liberian-white: #FFFFFF;
+
+  /* Primary Colors - Dark Mode Variants */
+  --liberian-red-dark: #E31E24;     /* Brighter red for dark backgrounds */
+  --liberian-blue-dark: #1E40AF;    /* Brighter blue for dark backgrounds */
+  --liberian-white-dark: #F8FAFC;   /* Softer white for dark mode */
+
+  /* Secondary Colors - Liberian Cultural Context (Light Mode) */
+  --liberian-gold: #FFD700;         /* Achievement and excellence */
+  --liberian-forest-green: #228B22; /* Growth and education */
+  --liberian-earth-brown: #8B4513;  /* Traditional and grounded */
+  --liberian-sunset-orange: #FF8C00; /* Warmth and community */
+
+  /* Secondary Colors - Dark Mode Variants */
+  --liberian-gold-dark: #FCD34D;    /* Softer gold for dark backgrounds */
+  --liberian-forest-green-dark: #34D399; /* Brighter green for dark backgrounds */
+  --liberian-earth-brown-dark: #A78BFA; /* Purple variant for dark mode */
+  --liberian-sunset-orange-dark: #FB923C; /* Softer orange for dark backgrounds */
+  
+  /* Semantic Colors with Cultural Appropriateness (Light Mode) */
+  --liberian-success: #22C55E;      /* Academic achievement */
+  --liberian-warning: #F59E0B;      /* Attention needed */
+  --liberian-error: #EF4444;        /* Issues requiring action */
+  --liberian-info: var(--liberian-blue); /* Information and guidance */
+
+  /* Semantic Colors - Dark Mode Variants */
+  --liberian-success-dark: #10B981; /* Brighter green for dark backgrounds */
+  --liberian-warning-dark: #FBBF24; /* Brighter yellow for dark backgrounds */
+  --liberian-error-dark: #F87171;   /* Softer red for dark backgrounds */
+  --liberian-info-dark: var(--liberian-blue-dark); /* Information and guidance */
+
+  /* Neutral Colors with Liberian Context (Light Mode) */
+  --liberian-gray-50: #F9FAFB;
+  --liberian-gray-100: #F3F4F6;
+  --liberian-gray-200: #E5E7EB;
+  --liberian-gray-300: #D1D5DB;
+  --liberian-gray-400: #9CA3AF;
+  --liberian-gray-500: #6B7280;
+  --liberian-gray-600: #4B5563;
+  --liberian-gray-700: #374151;
+  --liberian-gray-800: #1F2937;
+  --liberian-gray-900: #111827;
+
+  /* Dark Mode Neutral Colors */
+  --liberian-dark-50: #0F172A;      /* Darkest background */
+  --liberian-dark-100: #1E293B;     /* Dark background */
+  --liberian-dark-200: #334155;     /* Medium dark */
+  --liberian-dark-300: #475569;     /* Light dark */
+  --liberian-dark-400: #64748B;     /* Dark text */
+  --liberian-dark-500: #94A3B8;     /* Medium text */
+  --liberian-dark-600: #CBD5E1;     /* Light text */
+  --liberian-dark-700: #E2E8F0;     /* Lighter text */
+  --liberian-dark-800: #F1F5F9;     /* Lightest text */
+  --liberian-dark-900: #F8FAFC;     /* White text */
+  
+  /* Cultural Gradients (Light Mode) */
+  --liberian-flag-gradient: linear-gradient(135deg, var(--liberian-red) 0%, var(--liberian-white) 50%, var(--liberian-blue) 100%);
+  --liberian-pride-gradient: linear-gradient(90deg, var(--liberian-red) 0%, var(--liberian-blue) 100%);
+  --liberian-education-gradient: linear-gradient(135deg, var(--liberian-blue) 0%, var(--liberian-forest-green) 100%);
+  --liberian-achievement-gradient: linear-gradient(135deg, var(--liberian-gold) 0%, var(--liberian-sunset-orange) 100%);
+
+  /* Cultural Gradients (Dark Mode) */
+  --liberian-flag-gradient-dark: linear-gradient(135deg, var(--liberian-red-dark) 0%, var(--liberian-dark-100) 50%, var(--liberian-blue-dark) 100%);
+  --liberian-pride-gradient-dark: linear-gradient(90deg, var(--liberian-red-dark) 0%, var(--liberian-blue-dark) 100%);
+  --liberian-education-gradient-dark: linear-gradient(135deg, var(--liberian-blue-dark) 0%, var(--liberian-forest-green-dark) 100%);
+  --liberian-achievement-gradient-dark: linear-gradient(135deg, var(--liberian-gold-dark) 0%, var(--liberian-sunset-orange-dark) 100%);
+  
+  /* Typography Scale */
+  --liberian-font-family-primary: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+  --liberian-font-family-heading: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+  --liberian-font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Font Sizes - Educational Context */
+  --liberian-text-xs: 0.75rem;     /* 12px - Small labels */
+  --liberian-text-sm: 0.875rem;    /* 14px - Body text */
+  --liberian-text-base: 1rem;      /* 16px - Standard text */
+  --liberian-text-lg: 1.125rem;    /* 18px - Emphasized text */
+  --liberian-text-xl: 1.25rem;     /* 20px - Small headings */
+  --liberian-text-2xl: 1.5rem;     /* 24px - Section headings */
+  --liberian-text-3xl: 1.875rem;   /* 30px - Page headings */
+  --liberian-text-4xl: 2.25rem;    /* 36px - Major headings */
+  
+  /* Spacing Scale - Harmonious Proportions */
+  --liberian-space-1: 0.25rem;     /* 4px */
+  --liberian-space-2: 0.5rem;      /* 8px */
+  --liberian-space-3: 0.75rem;     /* 12px */
+  --liberian-space-4: 1rem;        /* 16px */
+  --liberian-space-5: 1.25rem;     /* 20px */
+  --liberian-space-6: 1.5rem;      /* 24px */
+  --liberian-space-8: 2rem;        /* 32px */
+  --liberian-space-10: 2.5rem;     /* 40px */
+  --liberian-space-12: 3rem;       /* 48px */
+  --liberian-space-16: 4rem;       /* 64px */
+  
+  /* Border Radius - Soft and Professional */
+  --liberian-radius-sm: 0.25rem;   /* 4px */
+  --liberian-radius-md: 0.375rem;  /* 6px */
+  --liberian-radius-lg: 0.5rem;    /* 8px */
+  --liberian-radius-xl: 0.75rem;   /* 12px */
+  --liberian-radius-2xl: 1rem;     /* 16px */
+  --liberian-radius-full: 9999px;  /* Full rounded */
+  
+  /* Shadows - Depth and Elevation */
+  --liberian-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --liberian-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --liberian-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --liberian-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --liberian-shadow-cultural: 0 8px 32px rgba(191, 10, 48, 0.15); /* Red shadow for cultural elements */
+  
+  /* Transitions - Smooth and Professional */
+  --liberian-transition-fast: 150ms ease-in-out;
+  --liberian-transition-normal: 250ms ease-in-out;
+  --liberian-transition-slow: 350ms ease-in-out;
+}
+
+/* ===== LIBERIAN TYPOGRAPHY SYSTEM ===== */
+.liberian-heading-1 {
+  font-family: var(--liberian-font-family-heading);
+  font-size: var(--liberian-text-4xl);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--liberian-red);
+  margin-bottom: var(--liberian-space-6);
+}
+
+.dark .liberian-heading-1 {
+  color: var(--liberian-red-dark);
+}
+
+.liberian-heading-2 {
+  font-family: var(--liberian-font-family-heading);
+  font-size: var(--liberian-text-3xl);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--liberian-blue);
+  margin-bottom: var(--liberian-space-5);
+}
+
+.dark .liberian-heading-2 {
+  color: var(--liberian-blue-dark);
+}
+
+.liberian-heading-3 {
+  font-family: var(--liberian-font-family-heading);
+  font-size: var(--liberian-text-2xl);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--liberian-gray-800);
+  margin-bottom: var(--liberian-space-4);
+}
+
+.dark .liberian-heading-3 {
+  color: var(--liberian-dark-800);
+}
+
+.liberian-body-text {
+  font-family: var(--liberian-font-family-primary);
+  font-size: var(--liberian-text-base);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--liberian-gray-700);
+}
+
+.dark .liberian-body-text {
+  color: var(--liberian-dark-700);
+}
+
+.liberian-small-text {
+  font-family: var(--liberian-font-family-primary);
+  font-size: var(--liberian-text-sm);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--liberian-gray-600);
+}
+
+.dark .liberian-small-text {
+  color: var(--liberian-dark-600);
+}
+
+/* ===== LIBERIAN COMPONENT STYLES ===== */
+
+/* ===== DARK MODE SUPPORT ===== */
+.dark {
+  /* Override primary colors for dark mode */
+  --liberian-red: var(--liberian-red-dark);
+  --liberian-blue: var(--liberian-blue-dark);
+  --liberian-white: var(--liberian-white-dark);
+  --liberian-gold: var(--liberian-gold-dark);
+  --liberian-forest-green: var(--liberian-forest-green-dark);
+  --liberian-earth-brown: var(--liberian-earth-brown-dark);
+  --liberian-sunset-orange: var(--liberian-sunset-orange-dark);
+
+  /* Override semantic colors for dark mode */
+  --liberian-success: var(--liberian-success-dark);
+  --liberian-warning: var(--liberian-warning-dark);
+  --liberian-error: var(--liberian-error-dark);
+  --liberian-info: var(--liberian-info-dark);
+
+  /* Override gradients for dark mode */
+  --liberian-flag-gradient: var(--liberian-flag-gradient-dark);
+  --liberian-pride-gradient: var(--liberian-pride-gradient-dark);
+  --liberian-education-gradient: var(--liberian-education-gradient-dark);
+  --liberian-achievement-gradient: var(--liberian-achievement-gradient-dark);
+}
+
+/* Cultural Header Styles */
+.liberian-header {
+  background: var(--liberian-flag-gradient);
+  border: 2px solid var(--liberian-red);
+  border-radius: var(--liberian-radius-lg);
+  padding: var(--liberian-space-6);
+  margin-bottom: var(--liberian-space-6);
+  box-shadow: var(--liberian-shadow-cultural);
+}
+
+.dark .liberian-header {
+  background: var(--liberian-flag-gradient-dark);
+  border-color: var(--liberian-red-dark);
+  box-shadow: 0 8px 32px rgba(227, 30, 36, 0.15);
+}
+
+.liberian-header h1 {
+  color: var(--liberian-red);
+  font-weight: 700;
+  font-size: var(--liberian-text-3xl);
+  margin-bottom: var(--liberian-space-2);
+}
+
+.dark .liberian-header h1 {
+  color: var(--liberian-red-dark);
+}
+
+.liberian-header p {
+  color: var(--liberian-blue);
+  font-weight: 500;
+  font-size: var(--liberian-text-lg);
+}
+
+.dark .liberian-header p {
+  color: var(--liberian-blue-dark);
+}
+
+/* Cultural Card Styles */
+.liberian-card {
+  background: var(--liberian-white);
+  border-radius: var(--liberian-radius-xl);
+  box-shadow: var(--liberian-shadow-lg);
+  padding: var(--liberian-space-6);
+  transition: all var(--liberian-transition-normal);
+  border-left: 4px solid var(--liberian-gray-300);
+}
+
+.dark .liberian-card {
+  background: var(--liberian-dark-100);
+  border-left-color: var(--liberian-dark-300);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+}
+
+.liberian-card:hover {
+  box-shadow: var(--liberian-shadow-xl);
+  transform: translateY(-2px);
+}
+
+.dark .liberian-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+.liberian-card.national-holiday {
+  border-left-color: var(--liberian-red);
+  background: linear-gradient(135deg, rgba(191, 10, 48, 0.02) 0%, var(--liberian-white) 100%);
+}
+
+.dark .liberian-card.national-holiday {
+  border-left-color: var(--liberian-red-dark);
+  background: linear-gradient(135deg, rgba(227, 30, 36, 0.1) 0%, var(--liberian-dark-100) 100%);
+}
+
+.liberian-card.cultural-event {
+  border-left-color: var(--liberian-blue);
+  background: linear-gradient(135deg, rgba(0, 40, 104, 0.02) 0%, var(--liberian-white) 100%);
+}
+
+.dark .liberian-card.cultural-event {
+  border-left-color: var(--liberian-blue-dark);
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, var(--liberian-dark-100) 100%);
+}
+
+.liberian-card.academic-event {
+  border-left-color: var(--liberian-forest-green);
+  background: linear-gradient(135deg, rgba(34, 139, 34, 0.02) 0%, var(--liberian-white) 100%);
+}
+
+.dark .liberian-card.academic-event {
+  border-left-color: var(--liberian-forest-green-dark);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, var(--liberian-dark-100) 100%);
+}
+
+/* Cultural Button Styles */
+.liberian-button {
+  font-family: var(--liberian-font-family-primary);
+  font-weight: 500;
+  border-radius: var(--liberian-radius-md);
+  padding: var(--liberian-space-3) var(--liberian-space-6);
+  transition: all var(--liberian-transition-fast);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.liberian-button-primary {
+  background: var(--liberian-pride-gradient);
+  color: var(--liberian-white);
+  box-shadow: var(--liberian-shadow-md);
+}
+
+.dark .liberian-button-primary {
+  background: var(--liberian-pride-gradient-dark);
+  color: var(--liberian-dark-900);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.liberian-button-primary:hover {
+  box-shadow: var(--liberian-shadow-lg);
+  transform: translateY(-1px);
+}
+
+.dark .liberian-button-primary:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+}
+
+.liberian-button-secondary {
+  background: var(--liberian-white);
+  color: var(--liberian-blue);
+  border: 2px solid var(--liberian-blue);
+}
+
+.dark .liberian-button-secondary {
+  background: var(--liberian-dark-100);
+  color: var(--liberian-blue-dark);
+  border-color: var(--liberian-blue-dark);
+}
+
+.liberian-button-secondary:hover {
+  background: var(--liberian-blue);
+  color: var(--liberian-white);
+}
+
+.dark .liberian-button-secondary:hover {
+  background: var(--liberian-blue-dark);
+  color: var(--liberian-dark-900);
+}
+
+/* WAEC Grade Badges */
+.liberian-waec-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--liberian-space-2) var(--liberian-space-3);
+  border-radius: var(--liberian-radius-full);
+  font-weight: 600;
+  font-size: var(--liberian-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.liberian-waec-badge.credit {
+  background: linear-gradient(135deg, var(--liberian-forest-green), var(--liberian-gold));
+  color: var(--liberian-white);
+  box-shadow: var(--liberian-shadow-sm);
+}
+
+.liberian-waec-badge.pass {
+  background: var(--liberian-warning);
+  color: var(--liberian-white);
+}
+
+.liberian-waec-badge.fail {
+  background: var(--liberian-error);
+  color: var(--liberian-white);
+}
+
+/* Ministry of Education Compliance Indicators */
+.liberian-moe-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--liberian-space-2) var(--liberian-space-4);
+  background: var(--liberian-education-gradient);
+  color: var(--liberian-white);
+  border-radius: var(--liberian-radius-lg);
+  font-weight: 500;
+  font-size: var(--liberian-text-sm);
+  box-shadow: var(--liberian-shadow-md);
+}
+
+.liberian-moe-indicator::before {
+  content: "🇱🇷";
+  margin-right: var(--liberian-space-2);
+}
+
+/* Cultural Navigation Styles */
+.liberian-nav {
+  background: var(--liberian-flag-gradient);
+  border-bottom: 3px solid var(--liberian-red);
+  box-shadow: var(--liberian-shadow-lg);
+}
+
+.liberian-nav-item {
+  color: var(--liberian-blue);
+  font-weight: 500;
+  padding: var(--liberian-space-4) var(--liberian-space-6);
+  transition: all var(--liberian-transition-fast);
+  border-bottom: 2px solid transparent;
+}
+
+.liberian-nav-item:hover {
+  background: rgba(191, 10, 48, 0.1);
+  border-bottom-color: var(--liberian-red);
+}
+
+.liberian-nav-item.active {
+  background: rgba(0, 40, 104, 0.1);
+  border-bottom-color: var(--liberian-blue);
+  color: var(--liberian-blue);
+  font-weight: 600;
+}
+
+/* Cultural Status Indicators */
+.liberian-status-excellent {
+  background: var(--liberian-achievement-gradient);
+  color: var(--liberian-white);
+}
+
+.liberian-status-good {
+  background: var(--liberian-forest-green);
+  color: var(--liberian-white);
+}
+
+.liberian-status-needs-improvement {
+  background: var(--liberian-warning);
+  color: var(--liberian-white);
+}
+
+.liberian-status-critical {
+  background: var(--liberian-error);
+  color: var(--liberian-white);
+}
+
+/* Cultural Loading States */
+.liberian-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--liberian-space-8);
+  color: var(--liberian-blue);
+  font-weight: 500;
+}
+
+.liberian-loading::before {
+  content: "🇱🇷";
+  margin-right: var(--liberian-space-3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Cultural Empty States */
+.liberian-empty-state {
+  text-align: center;
+  padding: var(--liberian-space-12);
+  background: linear-gradient(135deg, rgba(191, 10, 48, 0.02) 0%, rgba(0, 40, 104, 0.02) 100%);
+  border-radius: var(--liberian-radius-xl);
+  border: 2px dashed var(--liberian-gray-300);
+}
+
+.liberian-empty-state h3 {
+  color: var(--liberian-blue);
+  font-size: var(--liberian-text-xl);
+  font-weight: 600;
+  margin-bottom: var(--liberian-space-4);
+}
+
+.liberian-empty-state p {
+  color: var(--liberian-gray-600);
+  font-size: var(--liberian-text-base);
+}
+
+/* Responsive Design for Liberian Context */
+@media (max-width: 768px) {
+  .liberian-header {
+    padding: var(--liberian-space-4);
+    text-align: center;
+  }
+  
+  .liberian-header h1 {
+    font-size: var(--liberian-text-2xl);
+  }
+  
+  .liberian-card {
+    padding: var(--liberian-space-4);
+  }
+  
+  .liberian-nav-item {
+    padding: var(--liberian-space-3) var(--liberian-space-4);
+    font-size: var(--liberian-text-sm);
+  }
+}
+
+/* Print Styles for Official Documents */
+@media print {
+  .liberian-header {
+    background: var(--liberian-white) !important;
+    border: 2px solid var(--liberian-gray-800) !important;
+    box-shadow: none !important;
+  }
+  
+  .liberian-header h1 {
+    color: var(--liberian-gray-800) !important;
+  }
+  
+  .liberian-moe-indicator {
+    background: var(--liberian-white) !important;
+    color: var(--liberian-gray-800) !important;
+    border: 1px solid var(--liberian-gray-800) !important;
+  }
+}

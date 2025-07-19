@@ -1,9 +1,16 @@
 
-import React, { useContext, useMemo } from 'react'; 
+import React, { useContext, useMemo } from 'react';
 import { AppContext } from '../../App';
 import { Link } from 'react-router-dom';
-import { Student, Grade } from '../../types'; 
+import { Student, Grade } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import {
+  LiberianHeader,
+  LiberianCard,
+  LiberianMetricCard,
+  LiberianButton,
+  MoEIndicator
+} from '../Shared/LiberianDesignSystem';
 
 
 const CHART_COLORS = ['#0ea5e9', '#3b82f6', '#2563eb', '#1d4ed8', '#075985', '#0c4a6e'];
@@ -105,27 +112,44 @@ const TeacherDashboardContent: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Liberian Cultural Header */}
+      <LiberianHeader
+        title="🇱🇷 Teacher Dashboard"
+        subtitle="Welcome back! Monitor your classes and student progress with Liberian educational excellence."
+      >
+        <MoEIndicator text="Teaching Excellence" status="compliant" />
+      </LiberianHeader>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-primary-500">
-          <p className="text-sm font-medium text-gray-500 uppercase">Assigned Classes</p>
-          <p className="text-3xl font-bold text-gray-800">{assignedClassesCount}</p>
-           <Link to="/teacher/my-classes" className="mt-2 inline-block text-sm text-primary-600 hover:text-primary-800 font-medium">View My Classes &rarr;</Link>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-secondary-500">
-          <p className="text-sm font-medium text-gray-500 uppercase">Avg. Student Points (My Classes)</p>
-          <p className="text-3xl font-bold text-gray-800">{averageStudentPointsInMyClasses}</p>
-           <Link to="/teacher/points" className="mt-2 inline-block text-sm text-secondary-600 hover:text-secondary-800 font-medium">Award Points &rarr;</Link>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-400">
-          <p className="text-sm font-medium text-gray-500 uppercase">Assignments Awaiting Grading</p>
-          <p className="text-3xl font-bold text-gray-800">{assignmentsAwaitingGrading}</p>
-           <Link to="/teacher/grades" className="mt-2 inline-block text-sm text-yellow-600 hover:text-yellow-800 font-medium">Go to Gradebook &rarr;</Link>
-        </div>
+        <LiberianMetricCard
+          title="Assigned Classes"
+          value={assignedClassesCount}
+          color="red"
+          icon="🏫"
+          subtitle="View My Classes"
+        />
+        <LiberianMetricCard
+          title="Avg. Student Points"
+          value={averageStudentPointsInMyClasses}
+          color="blue"
+          icon="📊"
+          subtitle="Award Points"
+        />
+        <LiberianMetricCard
+          title="Awaiting Grading"
+          value={assignmentsAwaitingGrading}
+          color="yellow"
+          icon="📝"
+          subtitle="Go to Gradebook"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className="text-xl font-semibold text-gray-700 mb-4">Top Students (Points in My Classes)</h3>
+        <LiberianCard>
+          <h3 className="text-xl font-semibold text-red-700 mb-4 flex items-center">
+            <span className="mr-2">🏆</span>
+            Top Students (Points in My Classes)
+          </h3>
           {topStudentsInMyClasses.length > 0 ? (
             <ul className="space-y-3">
               {topStudentsInMyClasses.map((student, index) => (
@@ -144,10 +168,13 @@ const TeacherDashboardContent: React.FC = () => {
           ) : (
             <p className="text-gray-500">No students or points data available for your classes.</p>
           )}
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-xl font-semibold text-gray-700 mb-6">My Classes - Average Points</h2>
+        </LiberianCard>
+
+        <LiberianCard>
+            <h2 className="text-xl font-semibold text-blue-700 mb-6 flex items-center">
+              <span className="mr-2">📈</span>
+              My Classes - Average Points
+            </h2>
             {classAveragePointsData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
                 <BarChart
@@ -176,7 +203,7 @@ const TeacherDashboardContent: React.FC = () => {
             ) : (
             <p className="text-gray-500 text-center py-10">No class data available to display chart.</p>
             )}
-        </div>
+        </LiberianCard>
 
       </div>
       
