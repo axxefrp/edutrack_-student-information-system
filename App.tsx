@@ -19,6 +19,8 @@ declare global {
 }
 import { evaluateRulesForStudents } from './utils/pointRuleEngine';
 import { createOptimizedListener, clearCache } from './utils/firebaseQueryOptimization';
+import { serviceWorkerManager } from './utils/serviceWorkerManager';
+import OfflineStatusIndicator from './components/Shared/OfflineStatusIndicator';
 // Core components (loaded immediately)
 import LoginScreen from './components/Auth/LoginScreen';
 import RegisterScreen from './components/Auth/RegisterScreen';
@@ -132,6 +134,23 @@ const App: React.FC = () => {
       }, 500);
     }
   }, [authLoading]);
+
+  // Initialize service worker for Liberian school offline functionality
+  useEffect(() => {
+    // Service worker is automatically initialized via serviceWorkerManager import
+    console.log('🇱🇷 EduTrack Service Worker initialized for Liberian schools');
+
+    // Prefetch critical data for offline access
+    if (currentUser) {
+      const criticalUrls = [
+        '/#/admin/students',
+        '/#/teacher/my-classes',
+        '/#/teacher/attendance',
+        '/#/admin/classes'
+      ];
+      serviceWorkerManager.prefetchData(criticalUrls);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
