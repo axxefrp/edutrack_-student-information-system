@@ -17,6 +17,10 @@ export default defineConfig(({ mode }) => {
         react(),
         VitePWA({
           registerType: 'autoUpdate',
+          devOptions: {
+            enabled: true, // Enable service worker in development
+            type: 'module'
+          },
           workbox: {
             globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp,woff,woff2,ttf,eot}'],
             runtimeCaching: [

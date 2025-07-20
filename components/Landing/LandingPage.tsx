@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import ServiceWorkerVerification from '../Shared/ServiceWorkerVerification';
 import {
   AcademicCapIcon,
   UserGroupIcon,
@@ -124,6 +125,19 @@ const LandingPage: React.FC = () => {
               Sign In
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Service Worker Verification Section */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
+        <div className="max-w-4xl mx-auto">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+            🇱🇷 Offline Capabilities Status
+          </h3>
+          <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
+            EduTrack is optimized for Liberian schools with intermittent internet connectivity
+          </p>
+          <ServiceWorkerVerification />
         </div>
       </section>
 

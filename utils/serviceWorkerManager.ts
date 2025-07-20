@@ -50,9 +50,9 @@ class ServiceWorkerManager {
     }
 
     try {
-      // Use custom service worker for development, Workbox for production
-      const swUrl = import.meta.env.DEV ? '/sw-custom.js' : '/sw.js';
-      
+      // Use VitePWA generated service worker
+      const swUrl = '/sw.js';
+
       this.wb = new Workbox(swUrl);
 
       // Service worker lifecycle events
