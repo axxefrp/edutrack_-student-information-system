@@ -1,5 +1,5 @@
 
-import React, { useContext, useState, useMemo, useEffect } from 'react';
+import React, { useContext, useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../App';
 import { Student, SchoolClass as SchoolClassType } from '../../types';
@@ -53,18 +53,17 @@ const AdminStudentManagement: React.FC = () => {
   }, [students]);
 
 
-  const getSubjectName = (subjectId?: string | null): string => {
+  const getSubjectName = useCallback((subjectId?: string | null): string => {
     if (!subjectId) return 'N/A';
     const subject = allSubjects.find((s: { id: string; name: string }) => s.id === subjectId);
     return subject ? subject.name : 'Unknown Subject';
-  };
+  }, [allSubjects]);
 
-
-  const getTeacherName = (teacherId?: string | null): string => {
+  const getTeacherName = useCallback((teacherId?: string | null): string => {
     if (!teacherId) return 'Unassigned';
     const teacher = teachers.find((t: { id: string; name: string }) => t.id === teacherId);
     return teacher ? teacher.name : 'Unknown Teacher';
-  };
+  }, [teachers]);
 
 
   const filteredAndSortedStudents = useMemo(() => {
@@ -119,23 +118,23 @@ const AdminStudentManagement: React.FC = () => {
     return processableStudents;
   }, [students, searchTerm, filterGrade, selectedGradeFilter, pointsRangeFilter, sortConfig]);
 
-  const requestSort = (key: SortKey) => {
+  const requestSort = useCallback((key: SortKey) => {
     let direction: SortDirection = 'ascending';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
     setSortConfig({ key, direction });
-  };
+  }, [sortConfig]);
 
-  const getSortIndicator = (key: SortKey) => {
+  const getSortIndicator = useCallback((key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) {
-      return <span className="ml-1 opacity-40">↕</span>; 
+      return <span className="ml-1 opacity-40">↕</span>;
     }
     return sortConfig.direction === 'ascending' ? <span className="ml-1">▲</span> : <span className="ml-1">▼</span>;
-  };
+  }, [sortConfig]);
 
 
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     let isValid = true;
     setNameError('');
     setGradeError('');
@@ -152,9 +151,9 @@ const AdminStudentManagement: React.FC = () => {
       isValid = false;
     }
     return isValid;
-  };
+  }, [newStudentName, newStudentGrade]);
 
-  const handleAddStudent = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddStudent = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
@@ -172,16 +171,24 @@ const AdminStudentManagement: React.FC = () => {
       setIsSubmitting(false);
       // Optionally show error notification
     }
-  };
+  }, [validateForm, editingStudent, newStudentName, newStudentGrade, updateStudent, addStudent]);
 
-  const openAddModal = () => {
+  const resetFormFieldsAndErrors = useCallback(() => {
+    setNewStudentName('');
+    setNewStudentGrade('');
+    setNameError('');
+    setGradeError('');
+    setEnrolledClassesForEditingStudent([]);
+  }, []);
+
+  const openAddModal = useCallback(() => {
     setEditingStudent(null);
     resetFormFieldsAndErrors();
     setEnrolledClassesForEditingStudent([]);
     setIsModalOpen(true);
-  };
+  }, [resetFormFieldsAndErrors]);
 
-  const openEditModal = (student: Student) => {
+  const openEditModal = useCallback((student: Student) => {
     setEditingStudent(student);
     setNewStudentName(student.name);
     setNewStudentGrade(student.grade);
@@ -190,23 +197,15 @@ const AdminStudentManagement: React.FC = () => {
     const classesForStudent = schoolClasses.filter((sc: SchoolClassType) => sc.studentIds.includes(student.id));
     setEnrolledClassesForEditingStudent(classesForStudent);
     setIsModalOpen(true);
-  };
-  
-  const resetFormFieldsAndErrors = () => {
-    setNewStudentName('');
-    setNewStudentGrade('');
-    setNameError('');
-    setGradeError('');
-    setEnrolledClassesForEditingStudent([]);
-  };
+  }, [schoolClasses]);
 
-  const closeModalAndResetForm = () => {
+  const closeModalAndResetForm = useCallback(() => {
     setIsModalOpen(false);
     setEditingStudent(null);
     resetFormFieldsAndErrors();
-  };
+  }, [resetFormFieldsAndErrors]);
 
-  const handleDeleteStudent = async (studentToDelete: Student) => {
+  const handleDeleteStudent = useCallback(async (studentToDelete: Student) => {
     if (window.confirm(`Are you sure you want to delete ${studentToDelete.name}? This will also remove their grades and points records.`)) {
       setDeletingStudentId(studentToDelete.id);
       try {
@@ -216,11 +215,11 @@ const AdminStudentManagement: React.FC = () => {
       }
       setDeletingStudentId(null);
     }
-  };
-  
-  const SortableHeader: React.FC<{ sortKey: SortKey; label: string; className?: string }> = ({ sortKey, label, className }: { sortKey: SortKey; label: string; className?: string }) => (
-    <th 
-        scope="col" 
+  }, [deleteStudent]);
+
+  const SortableHeader = memo<{ sortKey: SortKey; label: string; className?: string }>(({ sortKey, label, className }) => (
+    <th
+        scope="col"
         className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 ${className || ''}`}
         onClick={() => requestSort(sortKey)}
         title={`Sort by ${label}`}
@@ -231,7 +230,7 @@ const AdminStudentManagement: React.FC = () => {
             {getSortIndicator(sortKey)}
         </div>
     </th>
-  );
+  ));
 
 
   return (
@@ -502,4 +501,4 @@ const AdminStudentManagement: React.FC = () => {
   );
 };
 
-export default AdminStudentManagement;
+export default memo(AdminStudentManagement);

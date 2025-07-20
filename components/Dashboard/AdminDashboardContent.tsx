@@ -1,5 +1,5 @@
 
-import React, { useContext } from 'react';
+import React, { useContext, useMemo, memo } from 'react';
 import { AppContext } from '../../App';
 import { Link } from 'react-router-dom';
 // Optimized imports for better tree shaking
@@ -24,7 +24,7 @@ import {
   MoEIndicator
 } from '../Shared/LiberianDesignSystem';
 
-const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; linkTo?: string; linkText?: string; color: string }> = ({ title, value, icon, linkTo, linkText, color }) => {
+const StatCard = memo<{ title: string; value: string | number; icon: React.ReactNode; linkTo?: string; linkText?: string; color: string }>(({ title, value, icon, linkTo, linkText, color }) => {
   const colorMap: Record<string, 'red' | 'blue' | 'green' | 'yellow' | 'purple'> = {
     'border-blue-500': 'blue',
     'border-green-500': 'green',
@@ -42,7 +42,7 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.Re
       subtitle={linkTo && linkText ? `View ${linkText}` : undefined}
     />
   );
-};
+});
 
 // Mock data for Student Performance Trend
 const mockPerformanceData = [
@@ -62,20 +62,22 @@ const AdminDashboardContent: React.FC = () => {
   const totalTeachers = teachers.length;
   const totalClasses = schoolClasses.length;
 
-  // Prepare data for Student Distribution Chart
-  const studentDistributionData = students.reduce((acc, student) => {
-    const gradeKey = `Grade ${student.grade}`;
-    acc[gradeKey] = (acc[gradeKey] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // Memoized expensive calculations
+  const studentDistChartData = useMemo(() => {
+    const studentDistributionData = students.reduce((acc, student) => {
+      const gradeKey = `Grade ${student.grade}`;
+      acc[gradeKey] = (acc[gradeKey] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const studentDistChartData = Object.entries(studentDistributionData)
-    .map(([grade, count]) => ({ grade, count }))
-    .sort((a, b) => {
-        const gradeANum = parseInt(a.grade.replace('Grade ', ''), 10);
-        const gradeBNum = parseInt(b.grade.replace('Grade ', ''), 10);
-        return gradeANum - gradeBNum;
-    });
+    return Object.entries(studentDistributionData)
+      .map(([grade, count]) => ({ grade, count }))
+      .sort((a, b) => {
+          const gradeANum = parseInt(a.grade.replace('Grade ', ''), 10);
+          const gradeBNum = parseInt(b.grade.replace('Grade ', ''), 10);
+          return gradeANum - gradeBNum;
+      });
+  }, [students]);
 
   const CHART_COLORS = ['#0ea5e9', '#3b82f6', '#2563eb', '#1d4ed8', '#075985', '#0c4a6e', '#172554', '#365314', '#166534'];
 
@@ -261,4 +263,4 @@ const AdminDashboardContent: React.FC = () => {
   );
 };
 
-export default AdminDashboardContent;
+export default memo(AdminDashboardContent);

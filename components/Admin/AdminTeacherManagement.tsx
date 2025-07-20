@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useMemo } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../App';
 import { Teacher, UserRole, User as UserType, SchoolClass } from '../../types';
@@ -95,22 +95,22 @@ const AdminTeacherManagement: React.FC = () => {
     return processableTeachers;
   }, [teachers, sortConfig, filterSubjectId]);
 
-  const requestSort = (key: SortableTeacherKey) => {
+  const requestSort = useCallback((key: SortableTeacherKey) => {
     let direction: SortDirection = 'ascending';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
     setSortConfig({ key, direction });
-  };
+  }, [sortConfig]);
 
-  const getSortIndicator = (key: SortableTeacherKey) => {
+  const getSortIndicator = useCallback((key: SortableTeacherKey) => {
     if (!sortConfig || sortConfig.key !== key) {
-      return <span className="ml-1 opacity-40">↕</span>; 
+      return <span className="ml-1 opacity-40">↕</span>;
     }
     return sortConfig.direction === 'ascending' ? <span className="ml-1">▲</span> : <span className="ml-1">▼</span>;
-  };
+  }, [sortConfig]);
 
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     let isValid = true;
     setNameError('');
     setSubjectError('');
@@ -129,7 +129,7 @@ const AdminTeacherManagement: React.FC = () => {
       isValid = false;
     }
     return isValid;
-  };
+  }, [teacherName, selectedSubjectIds, editingTeacher, availableUsers.length, selectedUserId]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,45 +155,45 @@ const AdminTeacherManagement: React.FC = () => {
     }, 1000); 
   };
 
-  const resetFormFieldsAndErrors = () => {
+  const resetFormFieldsAndErrors = useCallback(() => {
     setTeacherName('');
     setSelectedSubjectIds([]);
-    setSelectedUserId(availableUsers.length > 0 ? availableUsers[0].uid : ''); 
+    setSelectedUserId(availableUsers.length > 0 ? availableUsers[0].uid : '');
     setNameError('');
     setSubjectError('');
     setUserSelectError('');
     setAssignedClassesToEditingTeacher([]);
-  };
-  
-  const openAddModal = () => {
+  }, [availableUsers]);
+
+  const openAddModal = useCallback(() => {
     setEditingTeacher(null);
     resetFormFieldsAndErrors();
     if (availableUsers.length > 0) {
         setSelectedUserId(availableUsers[0].uid);
     } else {
-        setSelectedUserId(''); 
+        setSelectedUserId('');
     }
     setIsModalOpen(true);
-  };
+  }, [resetFormFieldsAndErrors, availableUsers]);
 
-  const openEditModal = (teacher: Teacher) => {
+  const openEditModal = useCallback((teacher: Teacher) => {
     setEditingTeacher(teacher);
     setTeacherName(teacher.name);
     setSelectedSubjectIds(teacher.subjectIds || []);
-    setSelectedUserId(teacher.userId); 
+    setSelectedUserId(teacher.userId);
     setNameError('');
     setSubjectError('');
     setUserSelectError('');
     const classesForTeacher = schoolClasses.filter(sc => sc.teacherIds.includes(teacher.id));
     setAssignedClassesToEditingTeacher(classesForTeacher);
     setIsModalOpen(true);
-  };
+  }, [schoolClasses]);
 
-  const closeModalAndResetForm = () => {
+  const closeModalAndResetForm = useCallback(() => {
     setIsModalOpen(false);
     setEditingTeacher(null);
     resetFormFieldsAndErrors();
-  };
+  }, [resetFormFieldsAndErrors]);
 
   const handleDeleteTeacher = (teacherToDelete: Teacher) => {
     if (window.confirm(`Are you sure you want to delete ${teacherToDelete.name}? They will be unassigned from any classes.`)) {
@@ -403,4 +403,4 @@ const AdminTeacherManagement: React.FC = () => {
   );
 };
 
-export default AdminTeacherManagement;
+export default memo(AdminTeacherManagement);
