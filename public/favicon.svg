@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Liberian Flag Colors Background -->
+  <rect width="100" height="100" fill="#BF0A30"/>
+  
+  <!-- Blue Square (representing Liberian flag) -->
+  <rect width="40" height="40" fill="#002868"/>
+  
+  <!-- White Star (representing Liberian flag) -->
+  <polygon points="20,8 24,18 35,18 26,25 30,35 20,28 10,35 14,25 5,18 16,18" fill="white"/>
+  
+  <!-- Education Symbol - Book -->
+  <rect x="45" y="15" width="45" height="30" fill="white" rx="3"/>
+  <rect x="48" y="18" width="39" height="24" fill="#002868" rx="2"/>
+  
+  <!-- Book Pages -->
+  <line x1="52" y1="22" x2="86" y2="22" stroke="white" stroke-width="1"/>
+  <line x1="52" y1="26" x2="82" y2="26" stroke="white" stroke-width="1"/>
+  <line x1="52" y1="30" x2="86" y2="30" stroke="white" stroke-width="1"/>
+  <line x1="52" y1="34" x2="78" y2="34" stroke="white" stroke-width="1"/>
+  <line x1="52" y1="38" x2="84" y2="38" stroke="white" stroke-width="1"/>
+  
+  <!-- Graduation Cap -->
+  <polygon points="50,55 90,55 85,50 55,50" fill="#002868"/>
+  <rect x="67" y="45" width="6" height="15" fill="#002868"/>
+  <circle cx="70" cy="42" r="3" fill="#BF0A30"/>
+  
+  <!-- EduTrack Text -->
+  <text x="50" y="80" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">EDU</text>
+  <text x="50" y="95" font-family="Arial, sans-serif" font-size="8" fill="white">TRACK</text>
+</svg>
