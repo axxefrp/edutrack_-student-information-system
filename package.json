@@ -51,6 +51,8 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "workbox-webpack-plugin": "^7.3.0",
+    "workbox-window": "^7.3.0"
   }
 }
