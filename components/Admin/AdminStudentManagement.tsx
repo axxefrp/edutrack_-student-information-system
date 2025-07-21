@@ -53,16 +53,21 @@ const AdminStudentManagement: React.FC = () => {
   }, [students]);
 
 
-  const getSubjectName = useCallback((subjectId?: string | null): string => {
-    if (!subjectId) return 'N/A';
-    const subject = allSubjects.find((s: { id: string; name: string }) => s.id === subjectId);
-    return subject ? subject.name : 'Unknown Subject';
+  // Enhanced helper functions for multiple subjects and teachers
+  const getSubjectNames = useCallback((subjectIds?: string[]): string => {
+    if (!subjectIds || subjectIds.length === 0) return 'N/A';
+    return subjectIds.map(id => {
+      const subject = allSubjects.find(s => s.id === id);
+      return subject ? subject.name : 'Unknown Subject';
+    }).join(', ');
   }, [allSubjects]);
 
-  const getTeacherName = useCallback((teacherId?: string | null): string => {
-    if (!teacherId) return 'Unassigned';
-    const teacher = teachers.find((t: { id: string; name: string }) => t.id === teacherId);
-    return teacher ? teacher.name : 'Unknown Teacher';
+  const getTeacherNames = useCallback((teacherIds?: string[]): string => {
+    if (!teacherIds || teacherIds.length === 0) return 'Unassigned';
+    return teacherIds.map(id => {
+      const teacher = teachers.find(t => t.id === id);
+      return teacher ? teacher.name : 'Unknown Teacher';
+    }).join(', ');
   }, [teachers]);
 
 
@@ -339,6 +344,9 @@ const AdminStudentManagement: React.FC = () => {
                 <SortableHeader sortKey="name" label="Name" />
                 <SortableHeader sortKey="grade" label="Grade" />
                 <SortableHeader sortKey="points" label="Points" />
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    📚 Classes
+                </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
@@ -392,50 +400,126 @@ const AdminStudentManagement: React.FC = () => {
 
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-4">
-        {filteredAndSortedStudents.map((student: Student) => (
-          <div key={student.id} className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">{student.name}</h3>
-                <div className="flex items-center space-x-4 mt-1">
-                  <span className="text-sm text-gray-600">Grade {student.grade}</span>
-                  <span className="text-sm text-gray-600">{student.points} points</span>
+        {filteredAndSortedStudents.map((student: Student) => {
+          const enrolledClasses = schoolClasses.filter(sc => sc.studentIds.includes(student.id));
+
+          return (
+            <div key={student.id} className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">{student.name}</h3>
+                  <div className="flex items-center space-x-4 mt-1">
+                    <span className="text-sm text-gray-600">Grade {student.grade}</span>
+                    <span className="text-sm text-gray-600">{student.points} points</span>
+                  </div>
+
+                  {/* Class Information for Mobile - Liberian School System */}
+                  {enrolledClasses.length > 0 ? (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      {enrolledClasses.length === 1 ? (
+                        // Single class (typical Liberian system)
+                        <div className="text-xs bg-gradient-to-r from-blue-50 to-green-50 p-3 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="font-semibold text-gray-800 mb-2 flex items-center">
+                            🏫 {enrolledClasses[0].name}
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-start text-gray-600">
+                              <span className="inline-flex items-center text-blue-600 font-medium mr-1 mt-0.5">📖</span>
+                              <div>
+                                <span className="text-xs font-medium">Subjects:</span>
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {getSubjectNames(enrolledClasses[0].subjectIds)}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-start text-gray-600">
+                              <span className="inline-flex items-center text-green-600 font-medium mr-1 mt-0.5">👨‍🏫</span>
+                              <div>
+                                <span className="text-xs font-medium">Teachers:</span>
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {getTeacherNames(enrolledClasses[0].teacherIds)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // Multiple classes (unusual but possible)
+                        <div>
+                          <div className="flex items-center text-xs text-gray-500 mb-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              ⚠️ {enrolledClasses.length} Classes (Unusual)
+                            </span>
+                          </div>
+                          <div className="text-xs text-yellow-600 mb-2 italic">
+                            Note: Students typically belong to one class in Liberian schools
+                          </div>
+                          <div className="space-y-1">
+                            {enrolledClasses.slice(0, 2).map(sc => (
+                              <div key={sc.id} className="text-xs bg-yellow-50 p-2 rounded border border-yellow-200">
+                                <div className="font-medium text-gray-700">{sc.name}</div>
+                                <div className="text-gray-500 text-xs">
+                                  {getSubjectNames(sc.subjectIds)} • {getTeacherNames(sc.teacherIds)}
+                                </div>
+                              </div>
+                            ))}
+                            {enrolledClasses.length > 2 && (
+                              <div className="text-xs text-center p-2 bg-yellow-50 rounded border border-yellow-200">
+                                <span className="text-yellow-700 font-medium">
+                                  +{enrolledClasses.length - 2} more
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <div className="text-xs text-gray-400 italic flex items-center">
+                        <span className="mr-1">📝</span>
+                        Not assigned to a class
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col space-y-1 ml-3">
+                  <Button
+                    onClick={() => navigate(`/admin/students/${student.id}`)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs px-2 py-1"
+                  >
+                    View
+                  </Button>
                 </div>
               </div>
-              <div className="flex flex-col space-y-1">
-                <Button
-                  onClick={() => navigate(`/admin/students/${student.id}`)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs px-2 py-1"
-                >
-                  View
-                </Button>
+
+              {/* Action Buttons for Mobile */}
+              <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => openEditModal(student)}
+                    variant="secondary"
+                    size="sm"
+                    className="text-xs px-3 py-1"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteStudent(student)}
+                    variant="danger"
+                    size="sm"
+                    loading={deletingStudentId === student.id}
+                    className="text-xs px-3 py-1"
+                  >
+                    Delete
+                  </Button>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-              <div className="flex space-x-2">
-                <Button
-                  onClick={() => openEditModal(student)}
-                  variant="secondary"
-                  size="sm"
-                  className="text-xs px-3 py-1"
-                >
-                  Edit
-                </Button>
-                <Button
-                  onClick={() => handleDeleteStudent(student)}
-                  variant="danger"
-                  size="sm"
-                  loading={deletingStudentId === student.id}
-                  className="text-xs px-3 py-1"
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {filteredAndSortedStudents.length === 0 && (
           <div className="bg-white shadow-md rounded-lg p-8 text-center text-gray-500">
             {filterGrade ? `No students found for Grade ${filterGrade}.` : "No students found. Add a new student to get started."}
@@ -469,23 +553,110 @@ const AdminStudentManagement: React.FC = () => {
           />
 
           {editingStudent && enrolledClassesForEditingStudent.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-                <h4 className="text-md font-semibold text-gray-700 mb-2">Enrolled Classes:</h4>
-                <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-md">
+            <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center mb-3">
+                    <h4 className="text-md font-semibold text-gray-700">
+                        🏫 {enrolledClassesForEditingStudent.length === 1 ? 'Assigned Class' : 'Assigned Classes'}
+                    </h4>
+                    {enrolledClassesForEditingStudent.length > 1 && (
+                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            ⚠️ {enrolledClassesForEditingStudent.length} Classes (Unusual)
+                        </span>
+                    )}
+                </div>
+                {enrolledClassesForEditingStudent.length > 1 && (
+                    <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-start">
+                            <span className="text-yellow-600 mr-2 mt-0.5">⚠️</span>
+                            <div className="text-sm text-yellow-800">
+                                <strong>Note:</strong> In the Liberian school system, students typically belong to one class with multiple teachers for different subjects.
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <div className="space-y-3 max-h-60 overflow-y-auto bg-gray-50 p-4 rounded-lg border border-gray-200">
                     {enrolledClassesForEditingStudent.map(sc => (
-                        <li key={sc.id} className="text-sm text-gray-600">
-                            {sc.name} 
-                            <span className="text-xs text-gray-500">
-                                ({getSubjectName(sc.subjectIds[0])} - Taught by: {getTeacherName(sc.teacherIds[0])})
-                            </span>
-                        </li>
+                        <div key={sc.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                                <div className="font-semibold text-gray-800 flex items-center">
+                                    🏫 {sc.name}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    {sc.studentIds.length} student{sc.studentIds.length !== 1 ? 's' : ''}
+                                </div>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex items-start">
+                                    <span className="inline-flex items-center text-blue-600 font-medium mr-2 mt-0.5">📖</span>
+                                    <div>
+                                        <span className="font-medium text-blue-700">Subjects:</span>
+                                        <div className="text-gray-600 mt-1">
+                                            {sc.subjectIds.map(subjectId => {
+                                                const subject = allSubjects.find(s => s.id === subjectId);
+                                                return subject ? (
+                                                    <span key={subjectId} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                                        {subject.name}
+                                                    </span>
+                                                ) : null;
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start">
+                                    <span className="inline-flex items-center text-green-600 font-medium mr-2 mt-0.5">👨‍🏫</span>
+                                    <div>
+                                        <span className="font-medium text-green-700">Teachers:</span>
+                                        <div className="text-gray-600 mt-1">
+                                            {sc.teacherIds.map(teacherId => {
+                                                const teacher = teachers.find(t => t.id === teacherId);
+                                                return teacher ? (
+                                                    <span key={teacherId} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                                        {teacher.name}
+                                                    </span>
+                                                ) : null;
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                                {sc.description && (
+                                    <div className="flex items-start pt-2 border-t border-gray-100">
+                                        <span className="inline-flex items-center text-gray-500 mr-2 mt-0.5">📝</span>
+                                        <div className="text-gray-600 text-sm italic">
+                                            {sc.description}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     ))}
-                </ul>
+                </div>
             </div>
           )}
           {editingStudent && enrolledClassesForEditingStudent.length === 0 && (
-             <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-gray-500 italic">This student is not currently enrolled in any classes.</p>
+             <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                        <span className="text-yellow-600 mr-3 mt-0.5">⚠️</span>
+                        <div className="flex-1">
+                            <h4 className="text-sm font-medium text-yellow-800">🇱🇷 No Class Assignment</h4>
+                            <p className="text-sm text-yellow-700 mt-1">
+                                This student is not currently assigned to a class. In the Liberian school system, each student should be assigned to one class (e.g., "Grade 5A", "Grade 6B") where they receive instruction from multiple teachers for different subjects.
+                            </p>
+                            <div className="mt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        alert('To assign this student to a class:\n\n1. Go to Admin → Class Management\n2. Select the appropriate class for this student\'s grade level\n3. Edit the class and add this student\n\nRemember: In Liberian schools, students typically belong to one class with multiple teachers.');
+                                    }}
+                                    className="inline-flex items-center px-3 py-2 border border-yellow-300 shadow-sm text-sm leading-4 font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+                                >
+                                    <span className="mr-1">🏫</span>
+                                    Assign to Class
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
           )}
 
