@@ -143,8 +143,8 @@ const ProfileSettings: React.FC = () => {
       newErrors.grade = 'Grade is required';
     }
 
-    if (currentUser.role === UserRole.TEACHER && editForm.subjectIds.length === 0) {
-      newErrors.subjects = 'At least one subject must be selected';
+    if (currentUser.role === UserRole.TEACHER && subjects.length > 0 && editForm.subjectIds.length === 0) {
+      newErrors.subjects = 'At least one subject must be selected when subjects are available';
     }
 
     setErrors(newErrors);
@@ -223,6 +223,32 @@ const ProfileSettings: React.FC = () => {
         </div>
 
         {/* Role-specific Information */}
+        {/* Teacher Subject Warning */}
+        {currentUser.role === UserRole.TEACHER && currentUser.teacherId && (
+          (() => {
+            const teacher = teachers.find(t => t.id === currentUser.teacherId);
+            return teacher && (!teacher.subjectIds || teacher.subjectIds.length === 0) && subjects.length > 0 ? (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start">
+                  <span className="text-yellow-600 mr-3 mt-0.5">⚠️</span>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-yellow-800">🇱🇷 Subject Assignment Required</h4>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      You haven't selected your teaching subjects yet. In the Liberian school system, teachers must specify which subjects they teach.
+                    </p>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="mt-2 inline-flex items-center px-3 py-2 border border-yellow-300 shadow-sm text-sm leading-4 font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                    >
+                      📖 Select Your Subjects
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null;
+          })()
+        )}
+
         {profileData && (
           <div className="border-t pt-6">
             <h3 className="text-md font-medium text-gray-800 mb-4">
@@ -321,11 +347,26 @@ const ProfileSettings: React.FC = () => {
             {currentUser.role === UserRole.TEACHER && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Teaching Subjects
+                  📖 Teaching Subjects
+                  <span className="text-xs text-gray-500 ml-2">
+                    ({editForm.subjectIds.length} selected)
+                  </span>
                 </label>
+                <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="text-xs text-blue-800">
+                    <strong>🇱🇷 Liberian School System:</strong> Select all subjects you teach across different classes.
+                  </div>
+                </div>
                 <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
                   {subjects.length > 0 ? subjects.map(subject => (
-                    <label key={subject.id} className="flex items-center space-x-2 cursor-pointer">
+                    <label
+                      key={subject.id}
+                      className={`flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md border transition-colors cursor-pointer ${
+                        editForm.subjectIds.includes(subject.id)
+                          ? 'bg-blue-50 border-blue-200'
+                          : 'bg-white border-gray-200'
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={editForm.subjectIds.includes(subject.id)}
@@ -333,13 +374,37 @@ const ProfileSettings: React.FC = () => {
                         disabled={isLoading}
                         className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                       />
-                      <span className="text-sm text-gray-700">{subject.name}</span>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-gray-700">{subject.name}</span>
+                        {subject.description && (
+                          <div className="text-xs text-gray-500 mt-1">{subject.description}</div>
+                        )}
+                      </div>
+                      {editForm.subjectIds.includes(subject.id) && (
+                        <span className="text-green-600 text-sm">✓</span>
+                      )}
                     </label>
                   )) : (
-                    <p className="text-sm text-gray-500 italic">No subjects available</p>
+                    <div className="text-center py-4">
+                      <div className="text-gray-400 mb-2">📚</div>
+                      <p className="text-sm text-gray-500 font-medium">No subjects available</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Contact your administrator to add subjects
+                      </p>
+                    </div>
                   )}
                 </div>
-                {errors.subjects && <p className="mt-1 text-sm text-red-600">{errors.subjects}</p>}
+                {editForm.subjectIds.length > 0 && (
+                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                    <p className="text-xs text-green-700">
+                      ✅ Selected subjects: {editForm.subjectIds.map(id => {
+                        const subject = subjects.find(s => s.id === id);
+                        return subject?.name;
+                      }).filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                )}
+                {errors.subjects && <p className="mt-1 text-sm text-red-600">⚠️ {errors.subjects}</p>}
               </div>
             )}
 

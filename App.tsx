@@ -241,20 +241,30 @@ const App: React.FC = () => {
       }
     );
 
-    // Firestore subjects listener
+    // Firestore subjects listener with error handling
     const subjectsCollectionRef = collection(db, "subjects");
-    const unsubscribeSubjects = onSnapshot(subjectsCollectionRef, (snapshot) => {
-      const subjectsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        // Defensive: ensure required fields exist and are strings
-        if (typeof data.name !== 'string' || !doc.id) {
-          console.warn('Malformed subject document:', doc.id, data);
-          return null;
-        }
-        return { ...data, id: doc.id } as Subject;
-      }).filter(Boolean);
-      setSubjects(subjectsData as Subject[]);
-    });
+    const unsubscribeSubjects = onSnapshot(
+      subjectsCollectionRef,
+      (snapshot) => {
+        console.log('📚 Subjects loaded:', snapshot.docs.length);
+        const subjectsData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          // Defensive: ensure required fields exist and are strings
+          if (typeof data.name !== 'string' || !doc.id) {
+            console.warn('Malformed subject document:', doc.id, data);
+            return null;
+          }
+          return { ...data, id: doc.id } as Subject;
+        }).filter(Boolean);
+        setSubjects(subjectsData as Subject[]);
+        console.log('📚 Subjects processed and set:', subjectsData.length);
+      },
+      (error) => {
+        console.error("❌ Error listening to subjects:", error);
+        console.error("Error code:", error.code, "Error message:", error.message);
+        setSubjects([]);
+      }
+    );
 
     // Optimized Firestore grades listener
     const unsubscribeGrades = createOptimizedListener<Grade>(

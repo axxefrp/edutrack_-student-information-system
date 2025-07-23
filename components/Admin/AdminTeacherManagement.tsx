@@ -62,7 +62,17 @@ const AdminTeacherManagement: React.FC = () => {
 
   if (!context) return null;
 
-  const { teachers, addTeacher, updateTeacher, deleteTeacher, schoolClasses, subjects: allSubjects } = context;
+  const { teachers, addTeacher, updateTeacher, deleteTeacher, schoolClasses, subjects: allSubjects, users, addNotificationDirectly } = context;
+
+  // Monitor subject loading for debugging
+  useEffect(() => {
+    console.log('🔧 AdminTeacherManagement: Subjects updated:', allSubjects.length);
+    if (allSubjects.length === 0) {
+      console.warn('🔧 No subjects loaded yet. This may prevent teacher registration.');
+    } else {
+      console.log('🔧 Available subjects:', allSubjects.map(s => s.name));
+    }
+  }, [allSubjects]);
 
   const getSubjectNames = (subjectIds?: string[]): string => {
     if (!subjectIds || subjectIds.length === 0) return 'N/A';
@@ -120,9 +130,13 @@ const AdminTeacherManagement: React.FC = () => {
       setNameError('Teacher name is required.');
       isValid = false;
     }
-    if (!selectedSubjectIds || selectedSubjectIds.length === 0) {
-      setSubjectError('At least one subject is required.');
+    // Allow registration without subjects if no subjects are available
+    if (allSubjects.length > 0 && (!selectedSubjectIds || selectedSubjectIds.length === 0)) {
+      setSubjectError('At least one subject is required when subjects are available.');
       isValid = false;
+    } else if (allSubjects.length === 0 && (!selectedSubjectIds || selectedSubjectIds.length === 0)) {
+      console.log('🔧 Allowing teacher registration without subjects (no subjects available)');
+      // This is allowed - teacher can select subjects later in settings
     }
     if (!editingTeacher && availableUsers.length > 0 && !selectedUserId) {
       setUserSelectError('Please select a user account to link.');
@@ -159,6 +173,9 @@ const AdminTeacherManagement: React.FC = () => {
             console.warn(`Mock creating teacher linked to a generated mock user ID: ${newTeacherUserId}. In a real system, a User account must exist or be created first.`);
         }
         console.log('🔧 Adding new teacher with subjects:', selectedSubjectIds);
+        if (selectedSubjectIds.length === 0) {
+          console.log('🔧 Teacher registered without subjects - they can add subjects later in Settings');
+        }
         addTeacher(teacherName, selectedSubjectIds, newTeacherUserId);
       }
       setIsSubmitting(false);
@@ -537,17 +554,36 @@ const AdminTeacherManagement: React.FC = () => {
                   <div className="text-gray-400 mb-2">📚</div>
                   <p className="text-sm text-gray-500 font-medium">No subjects available</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Please add subjects first in 'Admin → Manage Subjects'
+                    Subjects are required for teacher registration
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      alert('To add subjects:\n\n1. Go to Admin → Manage Subjects\n2. Click "Add New Subject"\n3. Create the subjects this teacher will teach\n4. Return here to assign subjects to the teacher');
-                    }}
-                    className="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    📖 Add Subjects First
-                  </button>
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="text-xs text-yellow-800">
+                      <strong>🇱🇷 Liberian School System:</strong> Teachers must be assigned to specific subjects they will teach.
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open('/#/admin/subjects', '_blank');
+                      }}
+                      className="w-full inline-flex items-center justify-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      📖 Open Subject Management
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        alert('To add subjects:\n\n1. Go to Admin → Manage Subjects\n2. Click "Add New Subject"\n3. Create subjects like "Mathematics", "English", "Science", etc.\n4. Return here to assign subjects to the teacher\n\nNote: Teachers can also update their subjects later in Settings.');
+                      }}
+                      className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                      ❓ How to Add Subjects
+                    </button>
+                  </div>
+                  <div className="mt-3 text-xs text-gray-500">
+                    <strong>Alternative:</strong> You can register the teacher without subjects and they can select their subjects later in Settings.
+                  </div>
                 </div>
               )}
             </div>
