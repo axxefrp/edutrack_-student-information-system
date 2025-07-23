@@ -133,26 +133,37 @@ const AdminTeacherManagement: React.FC = () => {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Debug logging
+    console.log('🔧 Form submission debug:');
+    console.log('- Teacher name:', teacherName);
+    console.log('- Selected subject IDs:', selectedSubjectIds);
+    console.log('- Available subjects:', allSubjects.length);
+    console.log('- Selected user ID:', selectedUserId);
+
     if (!validateForm()) {
+      console.log('🔧 Form validation failed');
       return;
     }
-    
+
     setIsSubmitting(true);
     setTimeout(() => {
       if (editingTeacher) {
+        console.log('🔧 Updating teacher with subjects:', selectedSubjectIds);
         updateTeacher({ ...editingTeacher, name: teacherName, subjectIds: selectedSubjectIds });
       } else {
         let newTeacherUserId = selectedUserId;
-        if (!newTeacherUserId) { 
+        if (!newTeacherUserId) {
             const tempUsername = teacherName.toLowerCase().replace(/\s+/g, '') + Date.now().toString().slice(-3);
-            newTeacherUserId = `user_mock_${tempUsername}`; 
+            newTeacherUserId = `user_mock_${tempUsername}`;
             console.warn(`Mock creating teacher linked to a generated mock user ID: ${newTeacherUserId}. In a real system, a User account must exist or be created first.`);
         }
+        console.log('🔧 Adding new teacher with subjects:', selectedSubjectIds);
         addTeacher(teacherName, selectedSubjectIds, newTeacherUserId);
       }
       setIsSubmitting(false);
       closeModalAndResetForm();
-    }, 1000); 
+    }, 1000);
   };
 
   const resetFormFieldsAndErrors = useCallback(() => {
@@ -251,17 +262,56 @@ const AdminTeacherManagement: React.FC = () => {
             <thead className="bg-gray-50">
                 <tr>
                 <SortableHeader sortKey="name" label="Name" />
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subjects</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Linked User ID</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">📖 Subjects</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🏫 Classes</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-                {sortedAndFilteredTeachers.map((teacher) => (
-                <tr key={teacher.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{teacher.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getSubjectNames(teacher.subjectIds)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{teacher.userId}</td>
+                {sortedAndFilteredTeachers.map((teacher) => {
+                    const assignedClasses = schoolClasses.filter(sc => sc.teacherIds.includes(teacher.id));
+                    return (
+                    <tr key={teacher.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            👨‍🏫 {teacher.name}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                            <div className="max-w-xs">
+                                {teacher.subjectIds.map(subjectId => {
+                                    const subject = allSubjects.find(s => s.id === subjectId);
+                                    return subject ? (
+                                        <span key={subjectId} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                            {subject.name}
+                                        </span>
+                                    ) : null;
+                                })}
+                            </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                            <div className="max-w-xs">
+                                {assignedClasses.length > 0 ? (
+                                    <div>
+                                        <div className="text-xs text-gray-600 mb-1">
+                                            Teaching {assignedClasses.length} class{assignedClasses.length !== 1 ? 'es' : ''}:
+                                        </div>
+                                        {assignedClasses.slice(0, 2).map(sc => (
+                                            <span key={sc.id} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                                {sc.name}
+                                            </span>
+                                        ))}
+                                        {assignedClasses.length > 2 && (
+                                            <span className="text-xs text-gray-500">
+                                                +{assignedClasses.length - 2} more
+                                            </span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-gray-400 italic">No classes assigned</span>
+                                )}
+                            </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{teacher.userId}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Button
                         onClick={() => navigate(`/admin/teachers/${teacher.id}`)}
@@ -291,10 +341,11 @@ const AdminTeacherManagement: React.FC = () => {
                     </Button>
                     </td>
                 </tr>
-                ))}
+                    );
+                })}
                 {sortedAndFilteredTeachers.length === 0 && (
                     <tr>
-                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                             {filterSubjectId ? `No teachers found for subject "${filterSubjectId}".` : "No teachers found. Add a new teacher to get started."}
                         </td>
                     </tr>
@@ -302,6 +353,117 @@ const AdminTeacherManagement: React.FC = () => {
             </tbody>
             </table>
         </div>
+      </div>
+
+      {/* Mobile Card View - Liberian School System */}
+      <div className="lg:hidden space-y-4">
+        {sortedAndFilteredTeachers.map((teacher) => {
+          const assignedClasses = schoolClasses.filter(sc => sc.teacherIds.includes(teacher.id));
+
+          return (
+            <div key={teacher.id} className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    👨‍🏫 {teacher.name}
+                  </h3>
+                  <div className="mt-2">
+                    <div className="flex items-start text-gray-600 mb-2">
+                      <span className="inline-flex items-center text-blue-600 font-medium mr-1 mt-0.5">📖</span>
+                      <div>
+                        <span className="text-sm font-medium">Subjects:</span>
+                        <div className="text-sm text-gray-500 mt-0.5">
+                          {getSubjectNames(teacher.subjectIds)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Class Assignments for Mobile - Liberian System */}
+                  {assignedClasses.length > 0 ? (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <div className="flex items-center text-xs text-gray-500 mb-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          🏫 Teaching {assignedClasses.length} Class{assignedClasses.length !== 1 ? 'es' : ''}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {assignedClasses.slice(0, 2).map(sc => (
+                          <div key={sc.id} className="text-xs bg-gradient-to-r from-green-50 to-blue-50 p-3 rounded-lg border border-gray-200 shadow-sm">
+                            <div className="font-semibold text-gray-800 mb-1 flex items-center">
+                              🏫 {sc.name}
+                            </div>
+                            <div className="text-gray-600 text-xs">
+                              <span className="font-medium">Subjects in this class:</span> {getSubjectNames(sc.subjectIds)}
+                            </div>
+                            <div className="text-gray-500 text-xs mt-1">
+                              {sc.studentIds.length} student{sc.studentIds.length !== 1 ? 's' : ''} enrolled
+                            </div>
+                          </div>
+                        ))}
+                        {assignedClasses.length > 2 && (
+                          <div className="text-xs text-center p-2 bg-gray-50 rounded border border-gray-200">
+                            <span className="text-gray-600 font-medium">
+                              +{assignedClasses.length - 2} more class{assignedClasses.length - 2 !== 1 ? 'es' : ''}
+                            </span>
+                            <div className="text-gray-500 text-xs mt-1">
+                              Click "Edit" to view all classes
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <div className="text-xs text-gray-400 italic flex items-center">
+                        <span className="mr-1">📝</span>
+                        Not assigned to any classes
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col space-y-1 ml-3">
+                  <Button
+                    onClick={() => navigate(`/admin/teachers/${teacher.id}`)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs px-2 py-1"
+                  >
+                    View
+                  </Button>
+                </div>
+              </div>
+
+              {/* Action Buttons for Mobile */}
+              <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => openEditModal(teacher)}
+                    variant="secondary"
+                    size="sm"
+                    className="text-xs px-3 py-1"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteTeacher(teacher)}
+                    variant="danger"
+                    size="sm"
+                    loading={deletingTeacherId === teacher.id}
+                    className="text-xs px-3 py-1"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {sortedAndFilteredTeachers.length === 0 && (
+          <div className="bg-white shadow-md rounded-lg p-8 text-center text-gray-500">
+            {filterSubjectId ? `No teachers found for subject "${filterSubjectId}".` : "No teachers found. Add a new teacher to get started."}
+          </div>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModalAndResetForm} title={editingTeacher ? "Edit Teacher" : "Add New Teacher"}>
@@ -317,29 +479,96 @@ const AdminTeacherManagement: React.FC = () => {
             error={nameError}
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Subjects Taught</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              📖 Subjects Taught
+              <span className="text-xs text-gray-500 ml-2">
+                ({allSubjects.length} available)
+              </span>
+            </label>
+            {/* Debug Information */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-400 mb-2">
+                Debug: {allSubjects.length} subjects loaded, {selectedSubjectIds.length} selected
+              </div>
+            )}
             <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
-              {allSubjects.length > 0 ? allSubjects.map(subject => (
-                <label key={subject.id} className={`flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md ${isSubmitting ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
-                  <input
-                    type="checkbox"
-                    checked={selectedSubjectIds.includes(subject.id)}
-                    onChange={() => {
-                      setSelectedSubjectIds(prev =>
-                        prev.includes(subject.id)
-                          ? prev.filter(id => id !== subject.id)
-                          : [...prev, subject.id]
-                      );
-                      if(subjectError) setSubjectError('');
+              {allSubjects.length > 0 ? (
+                <div className="space-y-2">
+                  {allSubjects.map(subject => (
+                    <label
+                      key={subject.id}
+                      className={`flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-md border transition-colors ${
+                        selectedSubjectIds.includes(subject.id)
+                          ? 'bg-blue-50 border-blue-200'
+                          : 'bg-white border-gray-200'
+                      } ${isSubmitting ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSubjectIds.includes(subject.id)}
+                        onChange={(e) => {
+                          console.log('🔧 Subject checkbox changed:', subject.name, e.target.checked);
+                          setSelectedSubjectIds(prev => {
+                            const newSelection = prev.includes(subject.id)
+                              ? prev.filter(id => id !== subject.id)
+                              : [...prev, subject.id];
+                            console.log('🔧 New subject selection:', newSelection);
+                            return newSelection;
+                          });
+                          if(subjectError) setSubjectError('');
+                        }}
+                        className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        disabled={isSubmitting}
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-gray-700">{subject.name}</span>
+                        {subject.description && (
+                          <div className="text-xs text-gray-500 mt-1">{subject.description}</div>
+                        )}
+                      </div>
+                      {selectedSubjectIds.includes(subject.id) && (
+                        <span className="text-green-600 text-sm">✓</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-2">📚</div>
+                  <p className="text-sm text-gray-500 font-medium">No subjects available</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Please add subjects first in 'Admin → Manage Subjects'
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert('To add subjects:\n\n1. Go to Admin → Manage Subjects\n2. Click "Add New Subject"\n3. Create the subjects this teacher will teach\n4. Return here to assign subjects to the teacher');
                     }}
-                    className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-sm text-gray-700">{subject.name}</span>
-                </label>
-              )) : <p className="text-xs text-gray-500">No subjects available. Please add subjects first in 'Manage Subjects'.</p>}
+                    className="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  >
+                    📖 Add Subjects First
+                  </button>
+                </div>
+              )}
             </div>
-            {subjectError && <p className="mt-1 text-xs text-red-600">{subjectError}</p>}
+            {subjectError && (
+              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                <p className="text-xs text-red-600 font-medium">⚠️ {subjectError}</p>
+              </div>
+            )}
+            {selectedSubjectIds.length > 0 && (
+              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                <p className="text-xs text-green-700">
+                  ✅ Selected {selectedSubjectIds.length} subject{selectedSubjectIds.length !== 1 ? 's' : ''}:
+                  <span className="ml-1 font-medium">
+                    {selectedSubjectIds.map(id => {
+                      const subject = allSubjects.find(s => s.id === id);
+                      return subject?.name;
+                    }).filter(Boolean).join(', ')}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
           {!editingTeacher && (
              availableUsers.length > 0 ? (
@@ -373,20 +602,115 @@ const AdminTeacherManagement: React.FC = () => {
            )}
 
             {editingTeacher && assignedClassesToEditingTeacher.length > 0 && (
-                <div className="mt-4 pt-4 border-t">
-                    <h4 className="text-md font-semibold text-gray-700 mb-2">Assigned Classes:</h4>
-                    <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-md">
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center mb-3">
+                        <h4 className="text-md font-semibold text-gray-700">🏫 Teaching Classes</h4>
+                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {assignedClassesToEditingTeacher.length} Class{assignedClassesToEditingTeacher.length !== 1 ? 'es' : ''}
+                        </span>
+                    </div>
+                    <div className="space-y-3 max-h-60 overflow-y-auto bg-gray-50 p-4 rounded-lg border border-gray-200">
                         {assignedClassesToEditingTeacher.map(sc => (
-                            <li key={sc.id} className="text-sm text-gray-600">
-                                {sc.name} <span className="text-xs text-gray-500">({getSubjectNames(sc.subjectIds)})</span>
-                            </li>
+                            <div key={sc.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-start justify-between mb-2">
+                                    <div className="font-semibold text-gray-800 flex items-center">
+                                        🏫 {sc.name}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        {sc.studentIds.length} student{sc.studentIds.length !== 1 ? 's' : ''}
+                                    </div>
+                                </div>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-start">
+                                        <span className="inline-flex items-center text-blue-600 font-medium mr-2 mt-0.5">📖</span>
+                                        <div>
+                                            <span className="font-medium text-blue-700">All Subjects in Class:</span>
+                                            <div className="text-gray-600 mt-1">
+                                                {sc.subjectIds.map(subjectId => {
+                                                    const subject = allSubjects.find(s => s.id === subjectId);
+                                                    const isTeaching = editingTeacher.subjectIds.includes(subjectId);
+                                                    return subject ? (
+                                                        <span
+                                                            key={subjectId}
+                                                            className={`inline-block text-xs px-2 py-1 rounded-full mr-1 mb-1 ${
+                                                                isTeaching
+                                                                    ? 'bg-green-100 text-green-800 font-medium'
+                                                                    : 'bg-gray-100 text-gray-600'
+                                                            }`}
+                                                        >
+                                                            {isTeaching && '✓ '}{subject.name}
+                                                        </span>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start">
+                                        <span className="inline-flex items-center text-green-600 font-medium mr-2 mt-0.5">👨‍🏫</span>
+                                        <div>
+                                            <span className="font-medium text-green-700">Other Teachers:</span>
+                                            <div className="text-gray-600 mt-1">
+                                                {sc.teacherIds.filter(tid => tid !== editingTeacher.id).map(teacherId => {
+                                                    const otherTeacher = teachers.find(t => t.id === teacherId);
+                                                    return otherTeacher ? (
+                                                        <span key={teacherId} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                                            {otherTeacher.name}
+                                                        </span>
+                                                    ) : null;
+                                                })}
+                                                {sc.teacherIds.filter(tid => tid !== editingTeacher.id).length === 0 && (
+                                                    <span className="text-gray-500 text-xs italic">Only teacher in this class</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {sc.description && (
+                                        <div className="flex items-start pt-2 border-t border-gray-100">
+                                            <span className="inline-flex items-center text-gray-500 mr-2 mt-0.5">📝</span>
+                                            <div className="text-gray-600 text-sm italic">
+                                                {sc.description}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         ))}
-                    </ul>
+                    </div>
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start">
+                            <span className="text-blue-600 mr-2 mt-0.5">🇱🇷</span>
+                            <div className="text-sm text-blue-800">
+                                <strong>Liberian School System:</strong> Teachers can teach multiple classes and subjects. Green checkmarks (✓) show which subjects this teacher teaches in each class.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
             {editingTeacher && assignedClassesToEditingTeacher.length === 0 && (
-                 <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm text-gray-500 italic">No classes currently assigned to this teacher.</p>
+                 <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-start">
+                            <span className="text-yellow-600 mr-3 mt-0.5">⚠️</span>
+                            <div className="flex-1">
+                                <h4 className="text-sm font-medium text-yellow-800">🇱🇷 No Class Assignments</h4>
+                                <p className="text-sm text-yellow-700 mt-1">
+                                    This teacher is not currently assigned to any classes. In the Liberian school system, teachers typically teach multiple classes and can specialize in specific subjects across different grade levels.
+                                </p>
+                                <div className="mt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            alert('To assign this teacher to classes:\n\n1. Go to Admin → Class Management\n2. Select classes that need this teacher\'s subjects\n3. Edit each class and add this teacher\n\nRemember: In Liberian schools, teachers can teach multiple classes and subjects.');
+                                        }}
+                                        className="inline-flex items-center px-3 py-2 border border-yellow-300 shadow-sm text-sm leading-4 font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+                                    >
+                                        <span className="mr-1">🏫</span>
+                                        Assign to Classes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
